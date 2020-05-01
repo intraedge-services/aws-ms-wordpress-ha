@@ -11,12 +11,9 @@ Production ready (HA) Wordpress Deployment for AWS
 - python3
 - pip3
 
-### Setup
-```
-pip3 install -r requirements-dev.txt --user
-```
 
 ### Pre-Commit Hooks
 ```
+pip3 install -r pre-commit
 pre-commit install
 ```

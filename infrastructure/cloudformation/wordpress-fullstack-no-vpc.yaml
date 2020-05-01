@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Conditions:
+  HasNot: !Equals [ 'true', 'false' ]
+
+# dummy (null) resource, never created
+# TODO: Need to buildout this stack
+Resources:
+  NullResource:
+    Type: 'Custom::NullResource'
+    Condition: HasNot

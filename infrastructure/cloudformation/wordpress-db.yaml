@@ -66,6 +66,13 @@ Parameters:
       - 'true'
       - 'false'
 
+  DeletionProtection:
+    Default: 'true'
+    Type: 'String'
+    Description: 'Enable deletion production?'
+    AllowedValues:
+      - 'true'
+      - 'false'
 
 Resources:
 
@@ -98,7 +105,7 @@ Resources:
       MasterUsername: !Ref DbUsername
       MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DbAuroraRootPasswordSecret, ':SecretString:password}}' ]]
       BackupRetentionPeriod: 35
-      DeletionProtection: true
+      DeletionProtection: !Ref DeletionProtection
       VpcSecurityGroupIds:
         - !Ref AuroraSecurityGroup
       DBSubnetGroupName:
