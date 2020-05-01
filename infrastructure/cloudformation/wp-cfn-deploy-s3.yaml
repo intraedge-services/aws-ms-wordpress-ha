@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Publishes cloudformation files to S3 Bucket.
+
+Resources:
+  PipelineBucket:
+    # Bucket used for holding Codepipeline Artifacts
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+            ExpirationInDays: 7
+            Id: ExpireOldObjects
+            NoncurrentVersionExpirationInDays: 7
+            Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "aws:kms"
+
+  CloudformationBucket:
+    Type: AWS::S3::Bucket
+    # Bucket used for holding Codepipeline Artifacts
+
+  CloudformationBucketPolicy:
+    # Allow public read access to S3 bucket
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CloudformationBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicRead
+            Effect: Allow
+            Principal: "*"
+            Action:
+              - s3:GetObject
+            Resource: !Sub ${CloudformationBucket.Arn}/*
