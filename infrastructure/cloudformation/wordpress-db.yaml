@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Description: Aurora serverless cluster
+
+Parameters:
+
+  DbSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 1"
+
+  DbSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 2"
+
+  DbSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 3"
+
+  AppSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 1 (For Lambda Password Rotation)"
+
+  AppSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 2 (For Lambda Password Rotation)"
+
+  AppSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 3 (For Lambda Password Rotation)"
+
+
+  AuroraSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: "Aurora Security Group"
+
+  AppLambdaDbAccessSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: "App Lambda DB Access Security Group (for password rotation) "
+
+  DbUsername:
+    Type: "String"
+    Default: "root"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "root")
+    MaxLength: '16'
+    MinLength: '1'
+
+  DbName:
+    Type: String
+    Description: The database name
+    Default: 'laraveldb'
+    MinLength: '1'
+
+  EngineVersion:
+    Type: String
+    Default: '5.6'
+    MinLength: '1'
+
+  AutoPause:
+    Default: 'true'
+    Type: 'String'
+    Description: 'Allow auto pause of database instance. Set it to false in production'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+
+Resources:
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: CloudFormation managed DB subnet group.
+      SubnetIds:
+        - !Ref DbSubnet1Id
+        - !Ref DbSubnet2Id
+        - !Ref DbSubnet3Id
+
+  DbAuroraRootPasswordSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Description: "Db Aurora Root Password Secret"
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${DbUsername}"}'
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: >
+          `^"@/\'
+  DbCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora
+      EngineMode: serverless
+      EngineVersion: !Ref EngineVersion
+      DatabaseName: !Ref DbName
+      MasterUsername: !Ref DbUsername
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DbAuroraRootPasswordSecret, ':SecretString:password}}' ]]
+      BackupRetentionPeriod: 35
+      DeletionProtection: true
+      VpcSecurityGroupIds:
+        - !Ref AuroraSecurityGroup
+      DBSubnetGroupName:
+        Ref: DbSubnetGroup
+      EnableHttpEndpoint: true
+      StorageEncrypted: true
+      ScalingConfiguration:
+        AutoPause: !Ref AutoPause
+        MaxCapacity: 8
+        MinCapacity: 1
+        SecondsUntilAutoPause: 3600
+
+  SecretRDSInstanceAttachment:
+    Type: "AWS::SecretsManager::SecretTargetAttachment"
+    Properties:
+      SecretId: !Ref DbAuroraRootPasswordSecret
+      TargetId: !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:${DbCluster}"
+      TargetType: AWS::RDS::DBCluster
+
+  DbSecretRotationTemplate:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSMySQLRotationSingleUser
+        SemanticVersion: 1.1.8
+      Parameters:
+        # The Secrets Manager endpoint to hit
+        endpoint: !Sub https://secretsmanager.${AWS::Region}.amazonaws.com
+        # The name of the lambda function
+        functionName: !Sub ${AWS::StackName}-DbSecretRotationTemplate
+        vpcSecurityGroupIds: !Ref AppLambdaDbAccessSecurityGroup
+        vpcSubnetIds: !Sub ${AppSubnet1Id},${AppSubnet2Id},${AppSubnet3Id}
+
+  DbPasswordRotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    DependsOn: "SecretRDSInstanceAttachment"
+    Properties:
+      RotationLambdaARN: !GetAtt DbSecretRotationTemplate.Outputs.RotationLambdaARN
+      RotationRules:
+        AutomaticallyAfterDays: 30
+      SecretId: !Ref DbAuroraRootPasswordSecret
+
+
+Outputs:
+  Endpoint:
+    Description: The database endpoint
+    Value: !GetAtt DbCluster.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-endpoint'
+
+  DbRootSecretArn:
+    Description: The database secret ARN
+    Value: !Ref DbAuroraRootPasswordSecret
