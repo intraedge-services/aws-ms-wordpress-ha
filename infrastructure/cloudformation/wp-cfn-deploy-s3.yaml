@@ -2,6 +2,37 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Description: Publishes cloudformation files to S3 Bucket.
 
+Parameters:
+  GitOwner:
+    Type: String
+    Description: Git Repository owner
+    Default: 'intraedge-services'
+    MinLength: '1'
+
+  GitRepo:
+    Type: String
+    Description: Git Repository containing source files
+    Default: 'aws-ms-wordpress-ha'
+    MinLength: '1'
+
+  GitBranch:
+    Type: String
+    Description: Git branch for which pipeline needs to be configured
+    Default: 'master'
+    MinLength: '1'
+
+  GithubOauthToken:
+    Type: String
+    Description: Github Oauth token for repo access
+    MinLength: '1'
+    NoEcho: true
+
+  ArtifactsVersion:
+    Type: String
+    Default: 'v1'
+    Description: Artifacts version prefix for publishing to S3 bucket
+    MinLength: 1
+
 Resources:
   PipelineBucket:
     # Bucket used for holding Codepipeline Artifacts
@@ -43,3 +74,86 @@ Resources:
             Action:
               - s3:GetObject
             Resource: !Sub ${CloudformationBucket.Arn}/*
+
+  AWSCodePipelineServiceRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Service Policy for Code Pipeline"
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+            Resource: "*"
+            Effect: Allow
+
+          - Effect: Allow
+            Action:
+              - cloudformation:ValidateTemplate
+            Resource: "*"
+
+          - Effect: Allow
+            Resource:
+              - !Sub arn:aws:s3:::${AWS::StackName}-*/*
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:GetBucketAcl
+              - s3:GetBucketLocation
+        Version: '2012-10-17'
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Description: Role for Code Pipeline
+      ManagedPolicyArns:
+        - !Ref AWSCodePipelineServiceRolePolicy
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref PipelineBucket
+        Type: S3
+      RestartExecutionOnUpdate: false
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                Repo: !Ref GitRepo
+                Owner: !Ref GitOwner
+                Branch: !Ref GitBranch
+                PollForSourceChanges: false
+                OAuthToken: !Ref GithubOauthToken
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployToS3
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: "S3"
+                Version: '1'
+              Configuration:
+                BucketName: !Ref CloudformationBucket
+                Extract: true
+                ObjectKey: !Ref ArtifactsVersion
+              InputArtifacts:
+                - Name: SourceOutput
