@@ -21,11 +21,13 @@ Parameters:
     Default: 'master'
     MinLength: '1'
 
-  GithubOauthToken:
+  SecretKey:
     Type: String
-    Description: Github Oauth token for repo access
+    Description: |
+      Secret manager secret for this stack (containing github token). This secret needs to be created prior to
+      launching the stack.
     MinLength: '1'
-    NoEcho: true
+    Default: 'wp-cfn-deploy-s3-stack'
 
   ArtifactsVersion:
     Type: String
@@ -141,7 +143,7 @@ Resources:
                 Owner: !Ref GitOwner
                 Branch: !Ref GitBranch
                 PollForSourceChanges: false
-                OAuthToken: !Ref GithubOauthToken
+                OAuthToken: !Sub '{{resolve:secretsmanager:${SecretKey}:SecretString:GithubOauthToken}}'
               RunOrder: 1
         - Name: Deploy
           Actions:
@@ -164,7 +166,8 @@ Resources:
     Properties:
       Authentication: GITHUB_HMAC
       AuthenticationConfiguration:
-        SecretToken: !Ref GithubOauthToken
+        # SecretToken: !Ref GithubOauthToken
+        SecretToken: !Sub '{{resolve:secretsmanager:${SecretKey}:SecretString:GithubOauthToken}}'
       Filters:
         -
           JsonPath: "$.ref"
