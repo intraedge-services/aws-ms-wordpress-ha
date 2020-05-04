@@ -157,3 +157,20 @@ Resources:
                 ObjectKey: !Ref ArtifactsVersion
               InputArtifacts:
                 - Name: SourceOutput
+
+  CodePipelineWebhook:
+    # See https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-webhooks-create-cfn.html
+    Type: AWS::CodePipeline::Webhook
+    Properties:
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken: !Ref GithubOauthToken
+      Filters:
+        -
+          JsonPath: "$.ref"
+          MatchEquals: !Sub refs/heads/${GitBranch}
+      TargetPipeline: !Ref CodePipeline
+      TargetAction: SourceAction
+      Name: AppPipelineWebhook
+      TargetPipelineVersion: !GetAtt CodePipeline.Version
+      RegisterWithThirdParty: true
