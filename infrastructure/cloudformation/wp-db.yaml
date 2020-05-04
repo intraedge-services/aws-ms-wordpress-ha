@@ -50,7 +50,7 @@ Parameters:
   DbName:
     Type: String
     Description: The database name
-    Default: 'laraveldb'
+    Default: 'wordpress'
     MinLength: '1'
 
   EngineVersion:
