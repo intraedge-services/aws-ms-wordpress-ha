@@ -70,6 +70,13 @@ Parameters:
     Type: "AWS::EC2::Subnet::Id"
     Description: "Application Subnet 3 (For Lambda Password Rotation)"
 
+  ParentStackName:
+    Type: 'String'
+    Description: 'Name of parent stack. If not specified, it defaults to current stack name'
+    MinLength: 0
+
+Conditions:
+  IsParentStack: !Equals [!Ref ParentStackName, '']
 
 Resources:
   VpcSecurity:
@@ -96,4 +103,9 @@ Resources:
         AuroraSecurityGroup: !GetAtt VpcSecurity.Outputs.AuroraSecurityGroup
         AppLambdaDbAccessSecurityGroup: !GetAtt VpcSecurity.Outputs.AppLambdaDbAccessSecurityGroup
         DeletionProtection: !Ref DbDeletionProtection
+        ParentStackName:
+          Fn::If:
+            - IsParentStack
+            - !Sub ${AWS::StackName}
+            - !Ref ParentStackName
     DeletionPolicy: "Delete"

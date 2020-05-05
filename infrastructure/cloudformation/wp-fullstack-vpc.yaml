@@ -66,6 +66,15 @@ Parameters:
       - 'true'
       - 'false'
 
+  ParentStackName:
+    Type: 'String'
+    Description: 'Name of parent stack. If not specified, it defaults to current stack name'
+    MinLength: 0
+
+Conditions:
+  IsParentStack: !Equals [!Ref ParentStackName, '']
+
+
 Resources:
   VPCStack:
     Type: "AWS::CloudFormation::Stack"
@@ -102,5 +111,10 @@ Resources:
         AppSubnet3Id: !GetAtt VPCStack.Outputs.PrivateSubnet3AID
         DbAutoPause: !Ref DbAutoPause
         DbDeletionProtection: !Ref DbDeletionProtection
+        ParentStackName:
+          Fn::If:
+            - IsParentStack
+            - !Sub ${AWS::StackName}
+            - !Ref ParentStackName
 
     DeletionPolicy: "Delete"

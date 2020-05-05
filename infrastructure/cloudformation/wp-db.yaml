@@ -74,6 +74,14 @@ Parameters:
       - 'true'
       - 'false'
 
+  ParentStackName:
+    Type: 'String'
+    Description: 'Name of parent stack. If not specified, it defaults to current stack name'
+    MinLength: 0
+
+Conditions:
+  IsParentStack: !Equals [!Ref ParentStackName, '']
+
 Resources:
 
   DbSubnetGroup:
@@ -135,7 +143,11 @@ Resources:
         # The Secrets Manager endpoint to hit
         endpoint: !Sub https://secretsmanager.${AWS::Region}.amazonaws.com
         # The name of the lambda function
-        functionName: !Sub ${AWS::StackName}-DbSecretRotationTemplate
+        functionName:
+          Fn::If:
+            - IsParentStack
+            - !Sub ${AWS::StackName}-DbSecretRotationTemplate
+            - !Sub ${ParentStackName}-DbSecretRotationTemplate
         vpcSecurityGroupIds: !Ref AppLambdaDbAccessSecurityGroup
         vpcSubnetIds: !Sub ${AppSubnet1Id},${AppSubnet2Id},${AppSubnet3Id}
 
