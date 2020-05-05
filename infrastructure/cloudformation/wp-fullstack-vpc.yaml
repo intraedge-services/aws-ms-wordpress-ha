@@ -31,24 +31,24 @@ Parameters:
     Type: String
     MinLength: 1
 
-#  CustomCfnBucketName:
-#    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-#    Default: wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod
-#    Description: Custom Cloudformation Bucket Name hosting nested stack templates.
-#    Type: String
-#    MinLength: 1
-#
-#  CustomCfnBucketRegion:
-#    Default: 'us-west-2'
-#    Description: The AWS Region where the custom S3 bucket (CustomCfnBucketName) is
-#      hosted. When using your own bucket, you must specify this value.
-#    Type: String
-#    MinLength: 1
-#
-#  CustomCfnBucketPrefix:
-#    Default: '/v1'
-#    Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
-#    Type: String
+  CustomCfnBucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Default: wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod
+    Description: Custom Cloudformation Bucket Name hosting nested stack templates.
+    Type: String
+    MinLength: 1
+
+  CustomCfnBucketRegion:
+    Default: 'us-west-2'
+    Description: The AWS Region where the custom S3 bucket (CustomCfnBucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
+    MinLength: 1
+
+  CustomCfnBucketPrefix:
+    Default: '/v1'
+    Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
+    Type: String
 
 Resources:
   VPCStack:
@@ -66,4 +66,10 @@ Resources:
         PrivateSubnetATag1: "type=app"
         PrivateSubnetBTag1: "type=db"
         PublicSubnetTag1:   "type=public"
+    DeletionPolicy: "Delete"
+
+  WPStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-fullstack-no-vpc.yaml"
     DeletionPolicy: "Delete"
