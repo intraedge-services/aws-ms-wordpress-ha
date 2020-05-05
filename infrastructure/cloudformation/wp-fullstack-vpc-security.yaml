@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "Wordpress VPC Security Settings"
+
+Parameters:
+  VpcId:
+    Type: "AWS::EC2::VPC::Id"
+    Description: "VPC Id"
+
+  VpnCidr:
+    Type: "String"
+    MinLength: 1
+    Description: "Vpn Cidr (Use 0.0.0.0/32) if Vpn is not used"
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+
+Resources:
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: ALB
+      GroupDescription: Access to Application Load Balancer
+      SecurityGroupIngress:
+        - Description: Allow HTTP
+          CidrIp: '0.0.0.0/0'
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: 'TCP'
+        - Description: Allow HTTPS
+          CidrIp: '0.0.0.0/0'
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: 'TCP'
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: Application
+      GroupDescription: Access to Application
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref AlbSecurityGroup
+          Description: Allow access from application
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: 'TCP'
+        - SourceSecurityGroupId: !Ref AlbSecurityGroup
+          Description: Allow access from application
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: 'TCP'
+
+  EfsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: EFS
+      GroupDescription: Access to Shield EFS
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref AppSecurityGroup
+          Description: Allow NFS access from application
+          FromPort: 2049
+          ToPort: 2049
+          IpProtocol: 'TCP'
+        - CidrIp: !Ref VpnCidr
+          Description: Allow NFS access from Jump host
+          FromPort: 2049
+          ToPort: 2049
+          IpProtocol: 'TCP'
+
+
+  AppLambdaDbAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: AppLambdaDbAccess
+      GroupDescription: SG For Lambda Application to access DB
+
+  AuroraSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: Access to aurora database
+      Tags:
+        - Key: Name
+          Value: Aurora
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref AppSecurityGroup
+          Description: Allow access from application
+          FromPort: 3306
+          ToPort: 3306
+          IpProtocol: 'TCP'
+        - CidrIp: !Ref VpnCidr
+          Description: Allow access from Jump Host
+          FromPort: 3306
+          ToPort: 3306
+          IpProtocol: 'TCP'
+        - SourceSecurityGroupId: !Ref AppLambdaDbAccessSecurityGroup
+          Description: Allow access for lambda functions to access database
+          FromPort: 3306
+          ToPort: 3306
+          IpProtocol: 'TCP'
+
+Outputs:
+
+  VpcId:
+    Value: !Ref VpcId
+    Export:
+      Name: !Sub '${AWS::StackName}-VpcId'
+
+  AuroraSecurityGroup:
+    Value: !Ref AuroraSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AuroraSecurityGroup'
+
+  AlbSecurityGroup:
+    Value: !Ref AlbSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AlbSecurityGroup'
+
+  AppSecurityGroup:
+    Value: !Ref AppSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSecurityGroup'
+
+  EfsSecurityGroup:
+    Value: !Ref EfsSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-EfsSecurityGroup'
+
+  AppLambdaDbAccessSecurityGroup:
+    Value: !Ref AppLambdaDbAccessSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AppLambdaDbAccessSecurityGroup'
