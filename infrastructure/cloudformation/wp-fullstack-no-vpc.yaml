@@ -1,11 +1,41 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Conditions:
-  HasNot: !Equals [ 'true', 'false' ]
+Parameters:
+  CustomCfnBucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Default: wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod
+    Description: Custom Cloudformation Bucket Name hosting nested stack templates.
+    Type: String
+    MinLength: 1
 
-# dummy (null) resource, never created
-# TODO: Need to buildout this stack
+  CustomCfnBucketRegion:
+    Default: 'us-west-2'
+    Description: The AWS Region where the custom S3 bucket (CustomCfnBucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
+    MinLength: 1
+
+  CustomCfnBucketPrefix:
+    Default: '/v1'
+    Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
+    Type: String
+
+  VpcId:
+    Type: "AWS::EC2::VPC::Id"
+    Description: "VPC Id"
+
+  VpnCidr:
+    Type: "String"
+    MinLength: 1
+    Description: "Vpn Cidr (Use 0.0.0.0/32) if Vpn is not used"
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+
 Resources:
-  NullResource:
-    Type: 'Custom::NullResource'
-    Condition: HasNot
+  VpcSecurity:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-vpc-security.yaml"
+      Parameters:
+        VpcId: !Ref VpcId
+        VpnCidr: !Ref VpnCidr
+    DeletionPolicy: "Delete"
