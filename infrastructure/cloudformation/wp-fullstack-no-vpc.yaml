@@ -109,3 +109,20 @@ Resources:
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
     DeletionPolicy: "Delete"
+
+  WpTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: "nginx:1.18.0-alpine"
+          Name: "nginx-proxy"
+          Essential: true
+          Memory: 128
+          PortMappings:
+            - ContainerPort: 443
+              HostPort: 443
+            - ContainerPort: 80
+              HostPort: 80
+      NetworkMode: 'awsvpc'
+      Memory: '512'
+      Cpu: '256'

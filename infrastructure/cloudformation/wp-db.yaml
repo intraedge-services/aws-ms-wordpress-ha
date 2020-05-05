@@ -125,6 +125,8 @@ Resources:
         MaxCapacity: 8
         MinCapacity: 1
         SecondsUntilAutoPause: 3600
+    DeletionPolicy: 'Snapshot'
+    UpdateReplacePolicy: 'Snapshot'
 
   SecretRDSInstanceAttachment:
     Type: "AWS::SecretsManager::SecretTargetAttachment"
