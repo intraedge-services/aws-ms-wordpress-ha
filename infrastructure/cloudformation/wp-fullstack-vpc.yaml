@@ -50,6 +50,22 @@ Parameters:
     Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
     Type: String
 
+  DbAutoPause:
+    Default: 'true'
+    Type: 'String'
+    Description: 'Allow auto pause of database instance. Set it to false in production'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  DbDeletionProtection:
+    Default: 'false'
+    Type: 'String'
+    Description: 'Enable database deletion protection?'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
 Resources:
   VPCStack:
     Type: "AWS::CloudFormation::Stack"
@@ -78,4 +94,13 @@ Resources:
         CustomCfnBucketPrefix: !Ref CustomCfnBucketPrefix
         VpcId: !GetAtt VPCStack.Outputs.VPCID
         VpnCidr: '0.0.0.0/32'  # Disable VPN Cidr for now
+        DbSubnet1Id:  !GetAtt VPCStack.Outputs.PrivateSubnet1BID
+        DbSubnet2Id:  !GetAtt VPCStack.Outputs.PrivateSubnet2BID
+        DbSubnet3Id:  !GetAtt VPCStack.Outputs.PrivateSubnet3BID
+        AppSubnet1Id: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
+        AppSubnet2Id: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
+        AppSubnet3Id: !GetAtt VPCStack.Outputs.PrivateSubnet3AID
+        DbAutoPause: !Ref DbAutoPause
+        DbDeletionProtection: !Ref DbDeletionProtection
+
     DeletionPolicy: "Delete"

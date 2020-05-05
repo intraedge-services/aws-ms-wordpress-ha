@@ -67,7 +67,7 @@ Parameters:
       - 'false'
 
   DeletionProtection:
-    Default: 'true'
+    Default: 'false'
     Type: 'String'
     Description: 'Enable deletion production?'
     AllowedValues:

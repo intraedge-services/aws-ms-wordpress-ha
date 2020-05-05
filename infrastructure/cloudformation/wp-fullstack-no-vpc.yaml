@@ -30,6 +30,47 @@ Parameters:
     Description: "Vpn Cidr (Use 0.0.0.0/32) if Vpn is not used"
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
 
+  DbSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 1"
+
+  DbSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 2"
+
+  DbSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Database Subnet 3"
+
+  DbAutoPause:
+    Default: 'true'
+    Type: 'String'
+    Description: 'Allow auto pause of database instance. Set it to false in production'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  DbDeletionProtection:
+    Default: 'false'
+    Type: 'String'
+    Description: 'Enable database deletion protection?'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  AppSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 1 (For Lambda Password Rotation)"
+
+  AppSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 2 (For Lambda Password Rotation)"
+
+  AppSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 3 (For Lambda Password Rotation)"
+
+
 Resources:
   VpcSecurity:
     Type: "AWS::CloudFormation::Stack"
@@ -38,4 +79,21 @@ Resources:
       Parameters:
         VpcId: !Ref VpcId
         VpnCidr: !Ref VpnCidr
+    DeletionPolicy: "Delete"
+
+  WpDatabase:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-db.yaml"
+      Parameters:
+        DbSubnet1Id: !Ref DbSubnet1Id
+        DbSubnet2Id: !Ref DbSubnet2Id
+        DbSubnet3Id: !Ref DbSubnet3Id
+        AppSubnet1Id: !Ref AppSubnet1Id
+        AppSubnet2Id: !Ref AppSubnet2Id
+        AppSubnet3Id: !Ref AppSubnet3Id
+        AutoPause:    !Ref DbAutoPause
+        AuroraSecurityGroup: !GetAtt VpcSecurity.Outputs.AuroraSecurityGroup
+        AppLambdaDbAccessSecurityGroup: !GetAtt VpcSecurity.Outputs.AppLambdaDbAccessSecurityGroup
+        DeletionProtection: !Ref DbDeletionProtection
     DeletionPolicy: "Delete"
