@@ -1,11 +1,69 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Conditions:
-  HasNot: !Equals [ 'true', 'false' ]
+Description: "Wordpress Fullstack with VPC"
 
-# dummy (null) resource, never created
-# TODO: Need to buildout this stack
+Parameters:
+  AvailabilityZones:
+    Description: "List of Availability Zones to use for the subnets in the VPC. Note: The logical order is preserved."
+    Type: "List<AWS::EC2::AvailabilityZone::Name>"
+
+  NumberOfAZs:
+    Type: Number
+    AllowedValues:
+      - 2
+      - 3
+      - 4
+    Default: 3
+    Description:  Number of AZs for VPC Stack
+    MinValue: 1
+
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Default: aws-quickstart
+    Description: AWS Quick Start S3 bucket name
+    Type: String
+    MinLength: 1
+
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value. This is used for VPC Quickstart.
+    Type: String
+    MinLength: 1
+
+#  CustomCfnBucketName:
+#    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+#    Default: wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod
+#    Description: Custom Cloudformation Bucket Name hosting nested stack templates.
+#    Type: String
+#    MinLength: 1
+#
+#  CustomCfnBucketRegion:
+#    Default: 'us-west-2'
+#    Description: The AWS Region where the custom S3 bucket (CustomCfnBucketName) is
+#      hosted. When using your own bucket, you must specify this value.
+#    Type: String
+#    MinLength: 1
+#
+#  CustomCfnBucketPrefix:
+#    Default: '/v1'
+#    Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
+#    Type: String
+
 Resources:
-  NullResource:
-    Type: 'Custom::NullResource'
-    Condition: HasNot
+  VPCStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${QSS3BucketName}.s3.${QSS3BucketRegion}.${AWS::URLSuffix}/quickstart-aws-vpc/templates/aws-vpc.template"
+      Parameters:
+        AvailabilityZones:
+          !Join
+          - ','
+          - !Ref AvailabilityZones
+        NumberOfAZs: !Ref NumberOfAZs
+        CreatePrivateSubnets: "true"
+        CreateAdditionalPrivateSubnets: "true"
+        PrivateSubnetATag1: "type=app"
+        PrivateSubnetBTag1: "type=db"
+        PublicSubnetTag1:   "type=public"
+    DeletionPolicy: "Delete"
