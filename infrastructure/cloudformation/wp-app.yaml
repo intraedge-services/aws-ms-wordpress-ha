@@ -36,6 +36,18 @@ Resources:
       LogGroupName: !Join ['/', [/ecs, !Ref ParentStackName, app]]
       RetentionInDays: !Ref AppLogRetentionDays
 
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
   WpTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -59,6 +71,7 @@ Resources:
       Memory: '512'
       Cpu: '256'
       RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
 
   ECSCluster:
     Type: AWS::ECS::Cluster
