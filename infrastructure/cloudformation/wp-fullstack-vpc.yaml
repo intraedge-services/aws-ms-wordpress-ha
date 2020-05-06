@@ -115,6 +115,9 @@ Resources:
         AppSubnet1Id: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
         AppSubnet2Id: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
         AppSubnet3Id: !GetAtt VPCStack.Outputs.PrivateSubnet3AID
+        PublicSubnet1Id: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PublicSubnet2Id: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+        PublicSubnet3Id: !GetAtt VPCStack.Outputs.PublicSubnet3ID
         DbAutoPause: !Ref DbAutoPause
         DbDeletionProtection: !Ref DbDeletionProtection
         ParentStackName:

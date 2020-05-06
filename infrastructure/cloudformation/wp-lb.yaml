@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Wordpress LoadBalancer Stack'
+
+Parameters:
+  PublicSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 1"
+
+  PublicSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 2"
+
+  PublicSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 3"
+
+  AlbSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: "ALB Security Group Id"
+
+Resources:
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        # this is the default, but is specified here in case it needs to be changed
+        - Key: idle_timeout.timeout_seconds
+          Value: '60'
+      # "internal" is also an option
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1Id
+        - !Ref PublicSubnet2Id
+        - !Ref PublicSubnet3Id

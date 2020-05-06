@@ -71,6 +71,18 @@ Parameters:
     Type: "AWS::EC2::Subnet::Id"
     Description: "Application Subnet 3 (For Lambda Password Rotation)"
 
+  PublicSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 1"
+
+  PublicSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 2"
+
+  PublicSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Public Subnet 3"
+
   ParentStackName:
     Type: 'String'
     Description: 'Name of parent stack. If not specified, it defaults to current stack name'
@@ -116,6 +128,16 @@ Resources:
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
     DeletionPolicy: "Delete"
+
+  WpLoadBalancer:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-lb.yaml"
+      Parameters:
+        PublicSubnet1Id: !Ref PublicSubnet1Id
+        PublicSubnet2Id: !Ref PublicSubnet2Id
+        PublicSubnet3Id: !Ref PublicSubnet3Id
+        AlbSecurityGroup:  !GetAtt VpcSecurity.Outputs.AlbSecurityGroup
 
   WpApp:
     Type: "AWS::CloudFormation::Stack"
