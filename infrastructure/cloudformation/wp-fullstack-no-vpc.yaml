@@ -126,6 +126,10 @@ Resources:
         AppSubnet2Id: !Ref AppSubnet2Id
         AppSubnet3Id: !Ref AppSubnet3Id
         AppSecurityGroup:  !GetAtt VpcSecurity.Outputs.AppSecurityGroup
-        ParentStackName: !Ref ParentStackName
+        ParentStackName:
+          Fn::If:
+            - IsParentStack
+            - !Sub ${AWS::StackName}
+            - !Ref ParentStackName
         AppLogRetentionDays:  !Ref AppLogRetentionDays
     DeletionPolicy: "Delete"

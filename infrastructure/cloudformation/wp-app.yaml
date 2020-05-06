@@ -20,8 +20,8 @@ Parameters:
 
   ParentStackName:
     Type: 'String'
-    Description: 'Name of parent stack. If not specified, it defaults to current stack name'
-    MinLength: 0
+    Description: 'Name of parent stack.'
+    MinLength: 1
 
   AppLogRetentionDays:
     Type: 'Number'
@@ -29,18 +29,11 @@ Parameters:
     MinValue: 1
     Default: 30
 
-Conditions:
-  IsParentStack: !Equals [!Ref ParentStackName, '']
-
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName:
-        Fn::If:
-          - IsParentStack
-          - !Join ['/', [/ecs, !Ref AWS::StackName, app]]
-          - !Join ['/', [/ecs, !Ref ParentStackName, app]]
+      LogGroupName: !Join ['/', [/ecs, !Ref ParentStackName, app]]
       RetentionInDays: !Ref AppLogRetentionDays
 
   WpTaskDefinition:
