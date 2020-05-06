@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Wordpress Application Stack'
+
+Parameters:
+  AppSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 1"
+
+  AppSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 2"
+
+  AppSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Application Subnet 3"
+
+  AppSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: "Application Security Group Id"
+
+Resources:
+  WpTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: "nginx:1.18.0-alpine"
+          Name: "nginx-proxy"
+          Essential: true
+          Memory: 128
+          PortMappings:
+            - ContainerPort: 443
+              HostPort: 443
+            - ContainerPort: 80
+              HostPort: 80
+      NetworkMode: 'awsvpc'
+      Memory: '512'
+      Cpu: '256'
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
+  WpService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ECSCluster
+      LaunchType: 'FARGATE'
+      PropagateTags: 'SERVICE'
+      SchedulingStrategy: 'REPLICA'
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: 'DISABLED'
+          SecurityGroups:
+            - !Ref AppSecurityGroup
+          Subnets:
+            - !Ref AppSubnet1Id
+            - !Ref AppSubnet2Id
+            - !Ref AppSubnet3Id
+      TaskDefinition: !Ref WpTaskDefinition

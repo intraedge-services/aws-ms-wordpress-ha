@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: 'Wordpress Full Stack (Existing VPC)'
 
 Parameters:
   CustomCfnBucketName:
@@ -110,19 +111,13 @@ Resources:
             - !Ref ParentStackName
     DeletionPolicy: "Delete"
 
-  WpTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  WpApp:
+    Type: "AWS::CloudFormation::Stack"
     Properties:
-      ContainerDefinitions:
-        - Image: "nginx:1.18.0-alpine"
-          Name: "nginx-proxy"
-          Essential: true
-          Memory: 128
-          PortMappings:
-            - ContainerPort: 443
-              HostPort: 443
-            - ContainerPort: 80
-              HostPort: 80
-      NetworkMode: 'awsvpc'
-      Memory: '512'
-      Cpu: '256'
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-app.yaml"
+      Parameters:
+        AppSubnet1Id: !Ref AppSubnet1Id
+        AppSubnet2Id: !Ref AppSubnet2Id
+        AppSubnet3Id: !Ref AppSubnet3Id
+        AppSecurityGroup:  !GetAtt VpcSecurity.Outputs.AppSecurityGroup
+    DeletionPolicy: "Delete"
