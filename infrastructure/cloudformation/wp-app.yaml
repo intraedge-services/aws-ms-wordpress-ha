@@ -58,7 +58,7 @@ Resources:
       NetworkMode: 'awsvpc'
       Memory: '512'
       Cpu: '256'
-
+      RequiresCompatibilities: [FARGATE]
 
   ECSCluster:
     Type: AWS::ECS::Cluster
