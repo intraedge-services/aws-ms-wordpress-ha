@@ -18,7 +18,31 @@ Parameters:
     Type: "AWS::EC2::SecurityGroup::Id"
     Description: "Application Security Group Id"
 
+  ParentStackName:
+    Type: 'String'
+    Description: 'Name of parent stack. If not specified, it defaults to current stack name'
+    MinLength: 0
+
+  AppLogRetentionDays:
+    Type: 'Number'
+    Description: 'Application log retention in days'
+    MinValue: 1
+    Default: 30
+
+Conditions:
+  IsParentStack: !Equals [!Ref ParentStackName, '']
+
 Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::If:
+          - IsParentStack
+          - !Join ['/', [/ecs, !Ref AWS::StackName, app]]
+          - !Join ['/', [/ecs, !Ref ParentStackName, app]]
+      RetentionInDays: !Ref AppLogRetentionDays
+
   WpTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -32,9 +56,16 @@ Resources:
               HostPort: 443
             - ContainerPort: 80
               HostPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: wordpress
       NetworkMode: 'awsvpc'
       Memory: '512'
       Cpu: '256'
+
 
   ECSCluster:
     Type: AWS::ECS::Cluster

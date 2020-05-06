@@ -71,6 +71,12 @@ Parameters:
     Description: 'Name of parent stack. If not specified, it defaults to current stack name'
     MinLength: 0
 
+  AppLogRetentionDays:
+    Type: 'Number'
+    Description: 'Application log retention in days'
+    MinValue: 1
+    Default: 30
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -116,5 +122,6 @@ Resources:
             - IsParentStack
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
+        AppLogRetentionDays: !Ref AppLogRetentionDays
 
     DeletionPolicy: "Delete"

@@ -76,6 +76,12 @@ Parameters:
     Description: 'Name of parent stack. If not specified, it defaults to current stack name'
     MinLength: 0
 
+  AppLogRetentionDays:
+    Type: 'Number'
+    Description: 'Application log retention in days'
+    MinValue: 1
+    Default: 30
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -120,4 +126,6 @@ Resources:
         AppSubnet2Id: !Ref AppSubnet2Id
         AppSubnet3Id: !Ref AppSubnet3Id
         AppSecurityGroup:  !GetAtt VpcSecurity.Outputs.AppSecurityGroup
+        ParentStackName: !Ref ParentStackName
+        AppLogRetentionDays:  !Ref AppLogRetentionDays
     DeletionPolicy: "Delete"
