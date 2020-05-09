@@ -18,6 +18,10 @@ Parameters:
     Type: "AWS::EC2::SecurityGroup::Id"
     Description: "ALB Security Group Id"
 
+  VpcId:
+    Type: "AWS::EC2::VPC::Id"
+    Description: "VPC Id"
+
 Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -34,3 +38,37 @@ Resources:
         - !Ref PublicSubnet1Id
         - !Ref PublicSubnet2Id
         - !Ref PublicSubnet3Id
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      # HealthCheckIntervalSeconds: 10
+      # will look for a 200 status code by default unless specified otherwise
+      # HealthCheckPath: !Ref HealthCheckPath
+      # HealthCheckTimeoutSeconds: 5
+      # UnhealthyThresholdCount: 2
+      # HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "60" # default is 300
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  ListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+#      Certificates:
+#        - CertificateArn: !Ref Certificate
+
+Outputs:
+  TargetGroupArn:
+    Description: Default target group ARN for wordpress load balancer
+    Value: !Ref TargetGroup

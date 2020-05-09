@@ -29,12 +29,83 @@ Parameters:
     MinValue: 1
     Default: 30
 
+  TargetGroupArn:
+    Type: 'String'
+    Description: 'Load balancer target group for associating ECS Service'
+    MinLength: 1
+
+
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Join ['/', [/ecs, !Ref ParentStackName, app]]
       RetentionInDays: !Ref AppLogRetentionDays
+
+  NginxConfig:
+    # Since nginx configuration does not contain any secret values, we will directly load iit as SSM Parameter
+    # This will be injected into container as secret environment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Wordpress Nginx Configuration
+      Tier: 'Intelligent-Tiering'
+      Type: String
+      Value: |
+        server {
+            # listen 443 ssl http2;
+            listen 80;
+            server_name _;
+
+            # ssl_certificate /etc/nginx/ssl/server.crt;
+            # ssl_certificate_key /etc/nginx/ssl/server.pem;
+
+            # Strict Security
+            add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+            add_header X-Frame-Options SAMEORIGIN always;
+            add_header X-Content-Type-Options nosniff always;
+            add_header Referrer-Policy same-origin always;
+            add_header Feature-Policy "vibrate 'self'; usermedia *; sync-xhr 'self'" always;
+
+            # Log files for Debug
+            # error_log  /var/log/nginx/error.log;
+            # access_log /var/log/nginx/access.log;
+
+            #Large File Uploads
+            client_max_body_size 100M;
+
+            # root /var/www/html/;
+            root /usr/share/nginx/html;
+            index index.php index.html;
+
+            location / {
+                proxy_set_header   Connection "";
+                proxy_http_version 1.1;
+                proxy_set_header        Host            $host;
+                proxy_set_header        X-Real-IP       $remote_addr;
+                proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+                # proxy_set_header      X-Forwarded-Proto https;
+                # proxy_set_header      X-Forwarded-Host $host:443;
+                try_files $uri $uri/ /index.php?$query_string;
+                gzip_static on;
+            }
+
+            location ~* .(ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|css|rss|atom|js|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
+                expires max;
+                log_not_found off;
+                access_log off;
+            }
+
+            # Nginx Pass requests to PHP-FPM
+            location ~ \.php$ {
+                try_files $uri =404;
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_pass localhost:9000;
+                fastcgi_index index.php;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param PATH_INFO $fastcgi_path_info;
+            }
+        }
 
   TaskExecutionRole:
     Type: AWS::IAM::Role
@@ -47,6 +118,16 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+      Policies:
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
 
   WpTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -67,6 +148,21 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
               awslogs-stream-prefix: wordpress
+          Secrets:
+            - Name: NGINX_CONFIG
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
+          Command:
+            - "sh"
+            - "-c"
+            - |
+              set -ueo pipefail;
+              # TODO: Pull in certs from ACM
+              NGINX_CONFD_DIR=/etc/nginx/conf.d
+              echo "Storing NGINX_CONFIG to $NGINX_CONFD_DIR/wordpress.conf"
+              mkdir -p $NGINX_CONFD_DIR
+              echo -n "$NGINX_CONFIG" > $NGINX_CONFD_DIR/wordpress.conf
+              echo "Starting nginx..."
+              nginx -g 'daemon off;'
       NetworkMode: 'awsvpc'
       Memory: '512'
       Cpu: '256'
@@ -96,3 +192,7 @@ Resources:
             - !Ref AppSubnet2Id
             - !Ref AppSubnet3Id
       TaskDefinition: !Ref WpTaskDefinition
+      LoadBalancers:
+        - ContainerName: nginx-proxy
+          ContainerPort: 80
+          TargetGroupArn: !Ref TargetGroupArn

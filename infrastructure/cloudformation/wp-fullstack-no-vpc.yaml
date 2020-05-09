@@ -138,6 +138,7 @@ Resources:
         PublicSubnet2Id: !Ref PublicSubnet2Id
         PublicSubnet3Id: !Ref PublicSubnet3Id
         AlbSecurityGroup:  !GetAtt VpcSecurity.Outputs.AlbSecurityGroup
+        VpcId: !Ref VpcId
 
   WpApp:
     Type: "AWS::CloudFormation::Stack"
@@ -154,4 +155,5 @@ Resources:
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
         AppLogRetentionDays:  !Ref AppLogRetentionDays
+        TargetGroupArn: !GetAtt WpLoadBalancer.Outputs.TargetGroupArn
     DeletionPolicy: "Delete"
