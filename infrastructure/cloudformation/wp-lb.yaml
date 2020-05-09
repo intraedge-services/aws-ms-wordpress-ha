@@ -101,3 +101,7 @@ Outputs:
   TargetGroupArn:
     Description: Default target group ARN for wordpress load balancer
     Value: !Ref TargetGroup
+
+  AlbDnsRecord:
+    Description: Route53 record value for ALB
+    Value: !Ref AlbDnsRecords

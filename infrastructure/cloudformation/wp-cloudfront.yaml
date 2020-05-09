@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Wordpress Cloudfront Stack'
+
+Parameters:
+  HostedZone:
+    Type: String
+    Description: "Hosted Zone Domain (e.g: example.com)"
+    MinLength: 5
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+
+  AlbDnsRecord:
+    Type: String
+    Description: "DNS Record for ALB (e.g.: lb.example.com.)"
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+
+  CloudfrontAcmCertificateArn:
+    Type: "String"
+    MinLength: "1"
+    Description: ARN For ACM Certificate to be used by ALB
+
+
+Resources:
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases: !Sub www.${HostedZone}
+        Enabled: true
+        Origins:
+          - DomainName: !Ref AlbDnsRecord
+            Id: 'Alb'
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: 'https-only'
+              OriginReadTimeout: 60
+              OriginSSLProtocols:
+                - TLSv1.2
+        PriceClass: 'PriceClass_All'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CloudfrontAcmCertificateArn
+          SslSupportMethod: 'sni-only'
+          MinimumProtocolVersion: 'TLSv1.2_2018'
+        # WebACLId: !Ref WafArn
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - PATCH
+            - POST
+            - DELETE
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          DefaultTTL: 0
+          MinTTL: 0
+          ViewerProtocolPolicy: 'redirect-to-https'
+          TargetOriginId: 'Alb'
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: 'all'
+            Headers:
+              - Host
+              - Content-Type
+              - Accept
+              - Authorization
+              - Accept-Language
+              - Origin
+              - Referer
+
+  WordpressDnsRecord:
+    Type: AWS::Route53::RecordSet
+    DependsOn:
+      - CloudfrontDistribution
+    Properties:
+      Name: !Sub "${HostedZone}."
+      HostedZoneName: !Sub ${HostedZone}.
+      AliasTarget:
+        DNSName: !Sub ${CloudfrontDistribution.DomainName}.
+        HostedZoneId: 'Z2FDTNDATAQYW2' # Always static for cloudfront
+      Type: A
+
+  WordpressWwwRecord:
+    Type: AWS::Route53::RecordSet
+    DependsOn:
+      - CloudfrontDistribution
+    Properties:
+      Name: !Sub "www.${HostedZone}."
+      HostedZoneName: !Sub ${HostedZone}.
+      AliasTarget:
+        DNSName: !Sub ${CloudfrontDistribution.DomainName}.
+        HostedZoneId: 'Z2FDTNDATAQYW2' # Always static for cloudfront
+      Type: A

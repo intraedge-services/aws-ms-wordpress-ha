@@ -146,6 +146,11 @@ Parameters:
     MinLength: 1
     Default: "0 0 ? * * *"
 
+  CloudfrontAcmCertificateArn:
+    Type: "String"
+    MinLength: "1"
+    Description: ARN For ACM Certificate to be used by ALB
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -195,6 +200,15 @@ Resources:
         HostedZone: !Ref HostedZone
         LoadBalancerDnsName: !Ref LoadBalancerDnsName
         VpcId: !Ref VpcId
+
+  WpLoadCloudfront:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-lb.yaml"
+      Parameters:
+        CloudfrontAcmCertificateArn: !Ref CloudfrontAcmCertificateArn
+        HostedZone: !Ref HostedZone
+        AlbDnsRecord: !GetAtt WpLoadBalancer.Outputs.AlbDnsRecord
 
   WpEfs:
     Type: "AWS::CloudFormation::Stack"

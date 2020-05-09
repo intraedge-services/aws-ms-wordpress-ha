@@ -129,6 +129,11 @@ Parameters:
     MinLength: 1
     Default: "0 0 ? * * *"
 
+  CloudfrontAcmCertificateArn:
+    Type: "String"
+    MinLength: "1"
+    Description: ARN For ACM Certificate to be used by ALB
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -186,5 +191,6 @@ Resources:
         SsmNginxCert: !Ref SsmNginxCert
         DbPasswordRotationScheduleInDays: !Ref DbPasswordRotationScheduleInDays
         EfsBackupCronSchedule: !Ref EfsBackupCronSchedule
+        CloudfrontAcmCertificateArn: !Ref CloudfrontAcmCertificateArn
 
     DeletionPolicy: "Delete"
