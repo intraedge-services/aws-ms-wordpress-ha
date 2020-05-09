@@ -85,6 +85,7 @@ Resources:
             add_header X-Content-Type-Options nosniff always;
             add_header Referrer-Policy same-origin always;
             add_header Feature-Policy "vibrate 'self'; usermedia *; sync-xhr 'self'" always;
+            add_header X-XSS-Protection "1; mode=block" always;
 
             # Log files for Debug
             error_log  /var/log/nginx/error.log;
