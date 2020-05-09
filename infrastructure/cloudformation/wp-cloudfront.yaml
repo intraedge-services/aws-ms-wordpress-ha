@@ -10,12 +10,13 @@ Parameters:
 
   AlbDnsRecord:
     Type: String
-    Description: "DNS Record for ALB (e.g.: lb.example.com.)"
-    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+    Description: "DNS Record for ALB (e.g.: lb.example.com)"
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+    MinLength: 5
 
   CloudfrontAcmCertificateArn:
     Type: "String"
-    MinLength: "1"
+    MinLength: 1
     Description: ARN For ACM Certificate to be used by ALB
 
 
