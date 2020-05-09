@@ -111,6 +111,29 @@ Parameters:
     Description: DNS Name for load balancer
     Default: "lb"
 
+  SsmParameterKmsKeyAlias:
+    Type: 'String'
+    Description: 'Load balancer target group for associating ECS Service'
+    Default: 'aws/ssm'
+    MinLength: 1
+
+  SsmNginxPrivateKey:
+    Type: 'String'
+    Description: |
+      SSM Parameter store parameter holding Nginx SSL Private key (eg: /wordpress/ssl/server.key)
+      The Nginx private key needs to be pre-generated and stored as a  SSM SecureString.
+    MinLength: 1
+    AllowedPattern: '^[/].*'
+
+  SsmNginxCert:
+    Type: 'String'
+    Description: |
+      SSM Parameter store parameter holding Nginx SSL public cert or bundled cert (eg: /wordpress/ssl/server.crt)
+      Nginx public cert needs to be pre-generated and stored as a  SSM SecureString.
+    MinLength: 1
+    AllowedPattern: '^[/].*'
+
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -176,4 +199,7 @@ Resources:
             - !Ref ParentStackName
         AppLogRetentionDays:  !Ref AppLogRetentionDays
         TargetGroupArn: !GetAtt WpLoadBalancer.Outputs.TargetGroupArn
+        SsmParameterKmsKeyAlias: !Ref SsmParameterKmsKeyAlias
+        SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
+        SsmNginxCert: !Ref SsmNginxCert
     DeletionPolicy: "Delete"
