@@ -77,6 +77,23 @@ Parameters:
     MinValue: 1
     Default: 30
 
+  AlbAcmCertificateArn:
+    Type: "String"
+    MinLength: "1"
+    Description: ARN For ACM Certificate to be used by ALB
+
+  HostedZone:
+    Type: String
+    Description: "Hosted Zone Domain (e.g: example.com.)"
+    MinLength: 5
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+
+  LoadBalancerDnsName:
+    Type: "String"
+    MinLength: "1"
+    Description: DNS Name for load balancer
+    Default: "lb"
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -126,5 +143,8 @@ Resources:
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
         AppLogRetentionDays: !Ref AppLogRetentionDays
+        AlbAcmCertificateArn: !Ref AlbAcmCertificateArn
+        HostedZone: !Ref HostedZone
+        LoadBalancerDnsName: !Ref LoadBalancerDnsName
 
     DeletionPolicy: "Delete"

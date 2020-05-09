@@ -22,6 +22,25 @@ Parameters:
     Type: "AWS::EC2::VPC::Id"
     Description: "VPC Id"
 
+  AlbAcmCertificateArn:
+    Type: "String"
+    MinLength: "1"
+    Description: ARN For ACM Certificate to be used by ALB
+
+  HostedZone:
+    Type: String
+    Description: "Hosted Zone Domain (e.g: example.com.)"
+    MinLength: 5
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+
+  LoadBalancerDnsName:
+    Type: "String"
+    MinLength: "1"
+    Description: DNS Name for load balancer
+    Default: "lb"
+
+
+
 Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -56,17 +75,27 @@ Resources:
       TargetType: ip
       VpcId: !Ref VpcId
 
-  ListenerHTTP:
+  ListenerHttps:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
       LoadBalancerArn: !Ref LoadBalancer
-      Port: 80
-      Protocol: HTTP
-#      Certificates:
-#        - CertificateArn: !Ref Certificate
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref AlbAcmCertificateArn
+
+  AlbDnsRecords:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Sub "${LoadBalancerDnsName}.${HostedZone}"
+      HostedZoneName: !Ref HostedZone
+      AliasTarget:
+        DNSName: !GetAtt LoadBalancer.DNSName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+      Type: A
 
 Outputs:
   TargetGroupArn:
