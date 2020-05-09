@@ -1,0 +1,134 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Elastic File System (Wordpress)
+
+Parameters:
+  EfsSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Efs Subnet 1"
+
+  EfsSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Efs Subnet 2"
+
+  EfsSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Efs Subnet 3"
+
+  EfsSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: "EFS Security Group"
+
+  EfsBackupCronSchedule:
+    Type: "String"
+    Description: "EFS Backup Cron Schedule"
+    MinLength: 1
+    Default: "0 0 ? * * *"
+
+
+Resources:
+  SharedFS:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+
+  EfsMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref SharedFS
+      SubnetId: !Ref EfsSubnet1Id
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  EfsMountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref SharedFS
+      SubnetId: !Ref EfsSubnet2Id
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  EfsMountTarget3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref SharedFS
+      SubnetId: !Ref EfsSubnet3Id
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  #-----------------------------------------------------------
+  # The following resources are used to conduct periodic backups
+  # for the EFS file system.
+  #-----------------------------------------------------------
+  FileSystemBackupVault:
+    Type: AWS::Backup::BackupVault
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BackupVaultName: !Sub efs-${SharedFS}-backup
+      AccessPolicy: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "backup:DeleteBackupVault",
+              "Resource": "*"
+            }
+          ]
+        }
+
+  #-----------------------------------------------------------
+  # File system backup plan
+  #-----------------------------------------------------------
+  FileSystemBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: Daily-Weekly-Monthly
+        BackupPlanRule:
+          - RuleName: DailyBackups
+            TargetBackupVault: !Ref FileSystemBackupVault
+            ScheduleExpression: !Sub "cron(${EfsBackupCronSchedule})"
+            StartWindowMinutes: 480
+            CompletionWindowMinutes: 10080
+            Lifecycle:
+              DeleteAfterDays: 35
+
+  #-----------------------------------------------------------
+  # File sysetm bacukp selection
+  #-----------------------------------------------------------
+  FileSystemBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref FileSystemBackupPlan
+      BackupSelection:
+        IamRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/service-role/AWSBackupDefaultServiceRole
+        Resources:
+          - !Sub arn:aws:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/${SharedFS}
+        SelectionName: !Sub efs-${SharedFS}-backup
+
+
+Outputs:
+  SharedFS:
+    Description: Shared File System
+    Value: !Ref SharedFS
+
+  EfsMountTarget1:
+    Description: Efs mount target for subnet 1
+    Value: !Ref EfsMountTarget1
+
+  EfsMountTarget2:
+    Description: Efs mount target for subnet 2
+    Value: !Ref EfsMountTarget2
+
+  EfsMountTarget3:
+    Description: Efs mount target for subnet 3
+    Value: !Ref EfsMountTarget3

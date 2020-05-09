@@ -140,6 +140,12 @@ Parameters:
     MinValue: 1
     Default: 365
 
+  EfsBackupCronSchedule:
+    Type: "String"
+    Description: "EFS Backup Cron Schedule"
+    MinLength: 1
+    Default: "0 0 ? * * *"
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -189,6 +195,17 @@ Resources:
         HostedZone: !Ref HostedZone
         LoadBalancerDnsName: !Ref LoadBalancerDnsName
         VpcId: !Ref VpcId
+
+  WpEfs:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-efs.yaml"
+      Parameters:
+        EfsSubnet1Id: !Ref DbSubnet1Id
+        EfsSubnet2Id: !Ref DbSubnet2Id
+        EfsSubnet13d: !Ref DbSubnet3Id
+        EfsSecurityGroup:  !GetAtt VpcSecurity.Outputs.EfsSecurityGroup
+        EfsBackupCronSchedule: !Ref EfsBackupCronSchedule
 
   WpApp:
     Type: "AWS::CloudFormation::Stack"

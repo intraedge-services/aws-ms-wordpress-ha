@@ -123,6 +123,12 @@ Parameters:
     MinValue: 1
     Default: 365
 
+  EfsBackupCronSchedule:
+    Type: "String"
+    Description: "EFS Backup Cron Schedule"
+    MinLength: 1
+    Default: "0 0 ? * * *"
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -179,5 +185,6 @@ Resources:
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
         DbPasswordRotationScheduleInDays: !Ref DbPasswordRotationScheduleInDays
+        EfsBackupCronSchedule: !Ref EfsBackupCronSchedule
 
     DeletionPolicy: "Delete"
