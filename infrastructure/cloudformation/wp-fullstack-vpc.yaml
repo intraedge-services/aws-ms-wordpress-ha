@@ -116,6 +116,13 @@ Parameters:
     MinLength: 1
     AllowedPattern: '^[/].*'
 
+  DbPasswordRotationScheduleInDays:
+    Type: 'Number'
+    Description: |
+      Rotate Database password in x days. The rotation requires wordpress app to be redeployed.
+    MinValue: 1
+    Default: 365
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -171,5 +178,6 @@ Resources:
         SsmParameterKmsKeyAlias: !Ref SsmParameterKmsKeyAlias
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
+        DbPasswordRotationScheduleInDays: !Ref DbPasswordRotationScheduleInDays
 
     DeletionPolicy: "Delete"

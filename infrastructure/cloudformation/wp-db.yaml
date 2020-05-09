@@ -79,6 +79,13 @@ Parameters:
     Description: 'Name of parent stack. If not specified, it defaults to current stack name'
     MinLength: 0
 
+  DbPasswordRotationScheduleInDays:
+    Type: 'Number'
+    Description: |
+      Rotate Database password in x days. The rotation requires wordpress app to be redeployed.
+    MinValue: 1
+    Default: 365
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -159,7 +166,7 @@ Resources:
     Properties:
       RotationLambdaARN: !GetAtt DbSecretRotationTemplate.Outputs.RotationLambdaARN
       RotationRules:
-        AutomaticallyAfterDays: 30
+        AutomaticallyAfterDays: !Ref DbPasswordRotationScheduleInDays
       SecretId: !Ref DbAuroraRootPasswordSecret
 
 
