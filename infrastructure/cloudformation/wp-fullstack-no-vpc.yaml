@@ -203,7 +203,7 @@ Resources:
       Parameters:
         EfsSubnet1Id: !Ref DbSubnet1Id
         EfsSubnet2Id: !Ref DbSubnet2Id
-        EfsSubnet13d: !Ref DbSubnet3Id
+        EfsSubnet3Id: !Ref DbSubnet3Id
         EfsSecurityGroup:  !GetAtt VpcSecurity.Outputs.EfsSecurityGroup
         EfsBackupCronSchedule: !Ref EfsBackupCronSchedule
 
