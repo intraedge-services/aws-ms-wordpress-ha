@@ -204,7 +204,7 @@ Resources:
   WpLoadCloudfront:
     Type: "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-lb.yaml"
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-cloudfront.yaml"
       Parameters:
         CloudfrontAcmCertificateArn: !Ref CloudfrontAcmCertificateArn
         HostedZone: !Ref HostedZone
