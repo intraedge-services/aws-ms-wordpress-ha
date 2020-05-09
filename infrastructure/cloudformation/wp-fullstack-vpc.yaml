@@ -84,9 +84,9 @@ Parameters:
 
   HostedZone:
     Type: String
-    Description: "Hosted Zone Domain (e.g: example.com.)"
+    Description: "Hosted Zone Domain (e.g: example.com)"
     MinLength: 5
-    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
 
   LoadBalancerDnsName:
     Type: "String"

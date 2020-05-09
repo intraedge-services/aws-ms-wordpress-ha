@@ -29,9 +29,9 @@ Parameters:
 
   HostedZone:
     Type: String
-    Description: "Hosted Zone Domain (e.g: example.com.)"
+    Description: "Hosted Zone Domain (e.g: example.com)"
     MinLength: 5
-    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])[.]$'
+    AllowedPattern: '^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
 
   LoadBalancerDnsName:
     Type: "String"
@@ -90,8 +90,8 @@ Resources:
   AlbDnsRecords:
     Type: AWS::Route53::RecordSet
     Properties:
-      Name: !Sub "${LoadBalancerDnsName}.${HostedZone}"
-      HostedZoneName: !Ref HostedZone
+      Name: !Sub "${LoadBalancerDnsName}.${HostedZone}."
+      HostedZoneName: !Sub ${HostedZone}.
       AliasTarget:
         DNSName: !GetAtt LoadBalancer.DNSName
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
