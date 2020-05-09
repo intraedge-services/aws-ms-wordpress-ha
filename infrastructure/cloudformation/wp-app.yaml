@@ -34,6 +34,27 @@ Parameters:
     Description: 'Load balancer target group for associating ECS Service'
     MinLength: 1
 
+  SsmParameterKmsKeyAlias:
+    Type: 'String'
+    Description: 'Load balancer target group for associating ECS Service'
+    Default: 'aws/ssm'
+    MinLength: 1
+
+  SsmNginxPrivateKey:
+    Type: 'String'
+    Description: |
+      SSM Parameter store parameter holding Nginx SSL Private key (eg: /wordpress/ssl/server.key)
+      The Nginx private key needs to be pre-generated and stored as a  SSM SecureString.
+    MinLength: 1
+    AllowedPattern: '^[/].*'
+
+  SsmNginxCert:
+    Type: 'String'
+    Description: |
+      SSM Parameter store parameter holding Nginx SSL public cert or bundled cert (eg: /wordpress/ssl/server.crt)
+      Nginx public cert needs to be pre-generated and stored as a  SSM SecureString.
+    MinLength: 1
+    AllowedPattern: '^[/].*'
 
 Resources:
   LogGroup:
@@ -52,12 +73,11 @@ Resources:
       Type: String
       Value: |
         server {
-            # listen 443 ssl http2;
-            listen 80;
+            listen 443 ssl http2;
             server_name _;
 
-            # ssl_certificate /etc/nginx/ssl/server.crt;
-            # ssl_certificate_key /etc/nginx/ssl/server.pem;
+            ssl_certificate /etc/nginx/ssl/server.crt;
+            ssl_certificate_key /etc/nginx/ssl/server.key;
 
             # Strict Security
             add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -67,8 +87,8 @@ Resources:
             add_header Feature-Policy "vibrate 'self'; usermedia *; sync-xhr 'self'" always;
 
             # Log files for Debug
-            # error_log  /var/log/nginx/error.log;
-            # access_log /var/log/nginx/access.log;
+            error_log  /var/log/nginx/error.log;
+            access_log /var/log/nginx/access.log;
 
             #Large File Uploads
             client_max_body_size 100M;
@@ -83,8 +103,8 @@ Resources:
                 proxy_set_header        Host            $host;
                 proxy_set_header        X-Real-IP       $remote_addr;
                 proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
-                # proxy_set_header      X-Forwarded-Proto https;
-                # proxy_set_header      X-Forwarded-Host $host:443;
+                proxy_set_header      X-Forwarded-Proto https;
+                proxy_set_header      X-Forwarded-Host $host:443;
                 try_files $uri $uri/ /index.php?$query_string;
                 gzip_static on;
             }
@@ -128,6 +148,9 @@ Resources:
                   - ssm:GetParameters
                 Resource:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxPrivateKey}
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxCert}
+                  - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${SsmParameterKmsKeyAlias}
 
   WpTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -140,8 +163,6 @@ Resources:
           PortMappings:
             - ContainerPort: 443
               HostPort: 443
-            - ContainerPort: 80
-              HostPort: 80
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -151,6 +172,10 @@ Resources:
           Secrets:
             - Name: NGINX_CONFIG
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
+            - Name: NGINX_SSL_PRIVATE_KEY
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxPrivateKey}
+            - Name: NGINX_SSL_CERT
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxCert}
           Command:
             - "sh"
             - "-c"
@@ -158,9 +183,16 @@ Resources:
               set -ueo pipefail;
               # TODO: Pull in certs from ACM
               NGINX_CONFD_DIR=/etc/nginx/conf.d
+              NGINX_SSL_DIR=/etc/nginx/ssl
               echo "Storing NGINX_CONFIG to $NGINX_CONFD_DIR/wordpress.conf"
-              mkdir -p $NGINX_CONFD_DIR
-              echo -n "$NGINX_CONFIG" > $NGINX_CONFD_DIR/wordpress.conf
+              mkdir -p "$NGINX_CONFD_DIR"
+              echo -n "$NGINX_CONFIG" > "$NGINX_CONFD_DIR/wordpress.conf"
+
+              echo "Adding certificates and private key"
+              mkdir -p "$NGINX_SSL_DIR"
+              echo -n "$NGINX_SSL_CERT" > "$NGINX_SSL_DIR/server.crt"
+              echo -n "$NGINX_SSL_PRIVATE_KEY" > "$NGINX_SSL_DIR/server.key"
+
               echo "Starting nginx..."
               nginx -g 'daemon off;'
       NetworkMode: 'awsvpc'
@@ -194,5 +226,5 @@ Resources:
       TaskDefinition: !Ref WpTaskDefinition
       LoadBalancers:
         - ContainerName: nginx-proxy
-          ContainerPort: 80
+          ContainerPort: 443
           TargetGroupArn: !Ref TargetGroupArn

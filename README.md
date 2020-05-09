@@ -33,6 +33,40 @@ Once the zone is created, updated the name server of the domain registrar to poi
 - Use DNS Validation for verifying domain.
 - Create the request and use option : "Create record in route53" to automatically create verification records.
 
+#### TLS Certificates
+For end-to-end encryption, we need to create TLS certificates for the application container as well.
+The certificate and private key needs to be stored into SSM Parameter as secure string.
+
+- Generate self signed certificates for the container
+```bash
+mkdir -p certs
+openssl req -new -newkey rsa:2048 -days 1825 -nodes -x509 -keyout certs/server.key -out certs/server.crt
+```
+- Add private key to SSM Parameter store as secure string.
+```bash
+aws ssm put-parameter \
+    --name "/wordpress/ssl/server.key" \
+    --type "SecureString" \
+    --value "file://./certs/server.key" \
+    --description "Wordpress SSL Private Key" \
+    --overwrite \
+    --tier Intelligent-Tiering \
+    --region <region>
+```
+- Add bundled cert to SSM Parameter store as secure string
+```bash
+aws ssm put-parameter \
+    --name "/wordpress/ssl/server.crt" \
+    --type "SecureString" \
+    --value "file://./certs/server.crt" \
+    --description "Wordpress SSL Cert Bundle" \
+    --overwrite \
+    --tier Intelligent-Tiering \
+    --region <region>
+```
+
+
+
 
 ### Launch Stack
 Stack                          | Description                                 | Quick Launch Url
