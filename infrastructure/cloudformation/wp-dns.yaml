@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Wordpress Route53 Zone'
+
+Parameters:
+  Domain:
+    Type: String
+    Description: "DNS Domain (e.g: example.com)"
+    MinLength: 5
+
+
+Resources:
+  DNS:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: !Sub ${Domain} Zone
+      Name: !Ref Domain
+
+Outputs:
+  DNSZone:
+    Description: DNS Zone ID
+    Value: !Ref DNS
+    Export:
+      Name: !Sub '${AWS::StackName}-DNSZone'
+  DNSDomain:
+    Description: DNS Domain
+    Value: !Ref Domain
+    Export:
+      Name: !Sub '${AWS::StackName}-DNSDomain'
