@@ -209,6 +209,7 @@ Resources:
     Properties:
       Cluster: !Ref ECSCluster
       LaunchType: 'FARGATE'
+      PlatformVersion: '1.4.0'
       PropagateTags: 'SERVICE'
       SchedulingStrategy: 'REPLICA'
       DeploymentConfiguration:
