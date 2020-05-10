@@ -74,4 +74,4 @@ Resources:
 Outputs:
   CustomResourceFunctionArn:
     Description: Lambda function for creating task definition.
-    Value: !Ref CustomResourceFunction
+    Value: !GetAtt CustomResourceFunction.Arn
