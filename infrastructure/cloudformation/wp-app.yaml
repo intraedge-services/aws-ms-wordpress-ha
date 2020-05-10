@@ -219,13 +219,13 @@ Resources:
                 containerPath: "/var/www/html"
             secrets:
               - name: WORDPRESS_DB_USERNAME
-                valueFrom: !Sub ${DbRootSecretArn}:username
+                valueFrom: !Sub "${DbRootSecretArn}:username::"
               - name: WORDPRESS_DB_NAME
-                valueFrom: !Sub ${DbRootSecretArn}:dbname
+                valueFrom: !Sub "${DbRootSecretArn}:dbname::"
               - name: WORDPRESS_DB_HOST
-                valueFrom: !Sub ${DbRootSecretArn}:host
+                valueFrom: !Sub "${DbRootSecretArn}:host::"
               - name: WORDPRESS_DB_PASSWORD
-                valueFrom: !Sub ${DbRootSecretArn}:password
+                valueFrom: !Sub "${DbRootSecretArn}:password::"
           - image: "nginx:1.18.0-alpine"
             name: "nginx-proxy"
             memory: 128
