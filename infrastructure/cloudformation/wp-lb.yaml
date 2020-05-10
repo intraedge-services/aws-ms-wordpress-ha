@@ -143,9 +143,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref TargetGroup
+        - TargetGroupArn: !Ref PrivateTargetGroup
           Type: forward
-      LoadBalancerArn: !Ref LoadBalancer
+      LoadBalancerArn: !Ref PrivateLoadBalancer
       Port: 443
       Protocol: HTTPS
       Certificates:
