@@ -127,7 +127,7 @@ Resources:
       TargetType: ip
       VpcId: !Ref VpcId
 
-  ListenerHttps:
+  PublicListenerHttps:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
@@ -170,7 +170,7 @@ Resources:
           PathPatternConfig:
             Values:
               - "*wp-admin*"
-      ListenerArn: !Ref ListenerHttps
+      ListenerArn: !Ref PublicListenerHttps
       Priority: 1
 
   AlbDnsRecords:
