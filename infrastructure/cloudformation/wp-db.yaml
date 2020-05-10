@@ -174,8 +174,6 @@ Outputs:
   Endpoint:
     Description: The database endpoint
     Value: !GetAtt DbCluster.Endpoint.Address
-    Export:
-      Name: !Sub '${AWS::StackName}-endpoint'
 
   DbRootSecretArn:
     Description: The database secret ARN

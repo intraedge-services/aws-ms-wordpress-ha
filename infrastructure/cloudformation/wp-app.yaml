@@ -72,6 +72,26 @@ Parameters:
     Description: EFS File System Id
     MinLength: 1
 
+  DbUsername:
+    Type: "String"
+    Default: "root"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "root")
+    MaxLength: '16'
+    MinLength: '1'
+
+  DbName:
+    Type: String
+    Description: The database name
+    Default: 'wordpress'
+    MinLength: '1'
+
+  DbHost:
+    Type: String
+    Description: Database host
+    MinLength: '1'
+
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -195,6 +215,13 @@ Resources:
             mountPoints:
               - sourceVolume: "efs"
                 containerPath: "/var/www/html"
+            environment:
+              - name: WORDPRESS_DB_USERNAME
+                value: !Ref DbUsername
+              - name: WORDPRESS_DB_NAME
+                value: !Ref DbName
+              - name: WORDPRESS_DB_HOST
+                value: !Ref DbHost
             secrets: []
           - image: "nginx:1.18.0-alpine"
             name: "nginx-proxy"

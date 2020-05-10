@@ -50,22 +50,6 @@ Parameters:
     Description: Folder prefix for CustomCfnBucketName where cloudformation templates are present.
     Type: String
 
-  DbAutoPause:
-    Default: 'true'
-    Type: 'String'
-    Description: 'Allow auto pause of database instance. Set it to false in production'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
-  DbDeletionProtection:
-    Default: 'false'
-    Type: 'String'
-    Description: 'Enable database deletion protection?'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   ParentStackName:
     Type: 'String'
     Description: 'Name of parent stack. If not specified, it defaults to current stack name'
@@ -128,6 +112,38 @@ Parameters:
       Rotate Database password in x days. The rotation requires wordpress app to be redeployed.
     MinValue: 1
     Default: 365
+
+  DbAutoPause:
+    Default: 'true'
+    Type: 'String'
+    Description: 'Allow auto pause of database instance. Set it to false in production'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  DbDeletionProtection:
+    Default: 'false'
+    Type: 'String'
+    Description: 'Enable database deletion protection?'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  DbUsername:
+    Type: "String"
+    Default: "root"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "root")
+    MaxLength: '16'
+    MinLength: '1'
+
+  DbName:
+    Type: String
+    Description: The database name
+    Default: 'wordpress'
+    MinLength: '1'
+
 
   EfsBackupCronSchedule:
     Type: "String"
@@ -223,6 +239,8 @@ Resources:
         PublicSubnet3Id: !GetAtt VPCStack.Outputs.PublicSubnet3ID
         DbAutoPause: !Ref DbAutoPause
         DbDeletionProtection: !Ref DbDeletionProtection
+        DbUsername: !Ref DbUsername
+        DbName:  !Ref DbName
         ParentStackName:
           Fn::If:
             - IsParentStack

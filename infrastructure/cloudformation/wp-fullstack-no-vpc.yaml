@@ -59,6 +59,21 @@ Parameters:
       - 'true'
       - 'false'
 
+  DbUsername:
+    Type: "String"
+    Default: "root"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "root")
+    MaxLength: '16'
+    MinLength: '1'
+
+  DbName:
+    Type: String
+    Description: The database name
+    Default: 'wordpress'
+    MinLength: '1'
+
   AppSubnet1Id:
     Type: "AWS::EC2::Subnet::Id"
     Description: "Application Subnet 1 (For Lambda Password Rotation)"
@@ -260,4 +275,7 @@ Resources:
         SsmNginxCert: !Ref SsmNginxCert
         CustomTaskDefinitionLambdaArn: !GetAtt WpCustomTaskDefinitionFunction.Outputs.CustomResourceFunctionArn
         EfsFileSystemId: !GetAtt WpEfs.Outputs.SharedFS
+        DbName: !Ref DbName
+        DbUsername: !Ref DbUsername
+        DbHost: !GetAtt WpDatabase.Outputs.Endpoint
     DeletionPolicy: "Delete"
