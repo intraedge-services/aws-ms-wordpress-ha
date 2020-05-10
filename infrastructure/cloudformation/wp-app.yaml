@@ -86,6 +86,7 @@ Resources:
             add_header Referrer-Policy same-origin always;
             add_header Feature-Policy "vibrate 'self'; usermedia *; sync-xhr 'self'" always;
             add_header X-XSS-Protection "1; mode=block" always;
+            server_tokens off;
 
             # Log files for Debug
             error_log  /var/log/nginx/error.log;
