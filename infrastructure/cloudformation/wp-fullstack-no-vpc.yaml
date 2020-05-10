@@ -247,4 +247,5 @@ Resources:
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
         CustomTaskDefinitionLambdaArn: !GetAtt WpCustomTaskDefinitionFunction.Outputs.CustomResourceFunctionArn
+        EfsFileSystemId: !GetAtt WpEfs.Outputs.SharedFS
     DeletionPolicy: "Delete"

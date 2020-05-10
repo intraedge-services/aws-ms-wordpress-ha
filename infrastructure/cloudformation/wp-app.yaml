@@ -62,6 +62,11 @@ Parameters:
       Custom lambda function ARN for creating ECS task definition that supports EFS Volumes
     MinLength: 1
 
+  EfsFileSystemId:
+    Type: 'String'
+    Description: EFS File System Id
+    MinLength: 1
+
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -220,6 +225,79 @@ Resources:
       RequiresCompatibilities: [FARGATE]
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
 
+  WpCustomTaskDefinition:
+    Type: 'Custom::TaskDefinition'
+    Version: '1.0'
+    Properties:
+      ServiceToken: !Ref CustomTaskDefinitionLambdaArn
+      TaskDefinition:
+        family: !Ref ParentStackName
+        volumes:
+          - name: "efs"
+            efsVolumeConfiguration:
+              fileSystemId: !Ref EfsFileSystemId
+
+        containerDefinitions:
+          - image: "wordpress:5.4.1-php7.4-fpm-alpine"
+            name: "wordpress"
+            memory: 128
+            logConfiguration:
+              logDriver: awslogs
+              options:
+                awslogs-region: !Ref AWS::Region
+                awslogs-group: !Ref LogGroup
+                awslogs-stream-prefix: wordpress-app
+            mountPoints:
+              - sourceVolume: "efs"
+                containerPath: "/var/www/html"
+            secrets: []
+          - image: "nginx:1.18.0-alpine"
+            name: "nginx-proxy"
+            memory: 128
+            portMappings:
+              - containerPort: 443
+                hostPort: 443
+            logConfiguration:
+              logDriver: awslogs
+              options:
+                awslogs-region: !Ref AWS::Region
+                awslogs-group: !Ref LogGroup
+                awslogs-stream-prefix: wordpress-nginx
+            secrets:
+              - name: NGINX_CONFIG
+                valueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
+              - name: NGINX_SSL_PRIVATE_KEY
+                valueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxPrivateKey}
+              - name: NGINX_SSL_CERT
+                valueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxCert}
+            command:
+              - "sh"
+              - "-c"
+              - |
+                set -ueo pipefail;
+                # TODO: Pull in certs from ACM
+                NGINX_CONFD_DIR=/etc/nginx/conf.d
+                NGINX_SSL_DIR=/etc/nginx/ssl
+                echo "Storing NGINX_CONFIG to $NGINX_CONFD_DIR/wordpress.conf"
+                mkdir -p "$NGINX_CONFD_DIR"
+                echo -n "$NGINX_CONFIG" > "$NGINX_CONFD_DIR/wordpress.conf"
+
+                echo "Adding certificates and private key"
+                mkdir -p "$NGINX_SSL_DIR"
+                echo -n "$NGINX_SSL_CERT" > "$NGINX_SSL_DIR/server.crt"
+                echo -n "$NGINX_SSL_PRIVATE_KEY" > "$NGINX_SSL_DIR/server.key"
+
+                echo "Starting nginx..."
+                nginx -g 'daemon off;'
+            mountPoints:
+              - sourceVolume: "efs"
+                containerPath: "/var/www/html"
+        networkMode: 'awsvpc'
+        memory: '512'
+        cpu: '256'
+        requiresCompatibilities: [FARGATE]
+        executionRoleArn: !GetAtt TaskExecutionRole.Arn
+
   ECSCluster:
     Type: AWS::ECS::Cluster
 
@@ -243,7 +321,7 @@ Resources:
             - !Ref AppSubnet1Id
             - !Ref AppSubnet2Id
             - !Ref AppSubnet3Id
-      TaskDefinition: !Ref WpTaskDefinition
+      TaskDefinition: !Ref WpCustomTaskDefinition
       LoadBalancers:
         - ContainerName: nginx-proxy
           ContainerPort: 443
