@@ -116,7 +116,7 @@ Resources:
         PasswordLength: 16
         ExcludeCharacters: >
           `^"@/\'
-      KmsKeyId: !Ref SecretManagerKmsKeyAlias
+      KmsKeyId: !Sub alias/${SecretManagerKmsKeyAlias}
 
   DbCluster:
     Type: AWS::RDS::DBCluster
