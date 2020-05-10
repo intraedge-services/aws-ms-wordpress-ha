@@ -134,6 +134,24 @@ Parameters:
     MinLength: "1"
     Description: ARN For ACM Certificate to be used by ALB
 
+  EnableClientVpn:
+    Type: String
+    Description: Enable Client Vpn
+    Default: "true"
+    AllowedValues: ["true", "false"]
+
+  ClientVpnServerCertificateArn:
+    Type: String
+    Description: "Client VPN Server Certificate ARN"
+    MinLength: 1
+    AllowedPattern: "arn[:].*"
+
+  ClientVpnLogsRetentionPeriod:
+    Type: Number
+    Default: 7
+    Description: "Retention (in days) for client vpn logs"
+    MinValue: 1
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -155,6 +173,21 @@ Resources:
         PrivateSubnetBTag1: "type=db"
         PublicSubnetTag1:   "type=public"
     DeletionPolicy: "Delete"
+
+  ClientVpnStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-client-vpn.yaml"
+      Parameters:
+        ClientCidrBlock: '10.0.144.0/20'
+        VpcId: !GetAtt VPCStack.Outputs.VPCID
+        SubnetId1: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        EnableClientVpn: !Ref EnableClientVpn
+        ServerCertificateArn: !Ref ClientVpnServerCertificateArn
+        TargetNetworkCidrforAuthorization: '0.0.0.0/0'
+        ClientVpnLogsRetentionPeriod: !Ref ClientVpnLogsRetentionPeriod
+    DeletionPolicy: "Delete"
+
 
   WPStack:
     Type: "AWS::CloudFormation::Stack"
