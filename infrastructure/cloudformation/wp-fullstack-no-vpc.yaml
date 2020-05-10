@@ -215,6 +215,7 @@ Resources:
         DbPasswordRotationScheduleInDays: !Ref DbPasswordRotationScheduleInDays
         DbName: !Ref DbName
         DbUsername: !Ref DbUsername
+        SecretManagerKmsKeyAlias: !Ref SecretManagerKmsKeyAlias
     DeletionPolicy: "Delete"
 
   WpLoadBalancer:
@@ -234,7 +235,6 @@ Resources:
         LoadBalancerDnsName: !Ref LoadBalancerDnsName
         PrivateLoadBalancerDnsName: !Ref PrivateLoadBalancerDnsName
         VpcId: !Ref VpcId
-        SecretManagerKmsKeyAlias: !Ref SecretManagerKmsKeyAlias
 
   WpLoadCloudfront:
     Type: "AWS::CloudFormation::Stack"
