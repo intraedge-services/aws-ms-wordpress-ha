@@ -120,7 +120,7 @@ Resources:
             location ~ \.php$ {
                 try_files $uri =404;
                 fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                fastcgi_pass localhost:9000;
+                fastcgi_pass wordpress:9000;
                 fastcgi_index index.php;
                 include fastcgi_params;
                 fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
@@ -157,6 +157,17 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
+        - Image: "wordpress:5.4.1-php7.4-fpm-alpine"
+          Name: "wordpress"
+          Essential: false
+          Memory: 128
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: wordpress-app
+          Secrets: []
         - Image: "nginx:1.18.0-alpine"
           Name: "nginx-proxy"
           Essential: true
@@ -169,7 +180,7 @@ Resources:
             Options:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: wordpress
+              awslogs-stream-prefix: wordpress-nginx
           Secrets:
             - Name: NGINX_CONFIG
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
@@ -196,6 +207,8 @@ Resources:
 
               echo "Starting nginx..."
               nginx -g 'daemon off;'
+          Links:
+            - wordpress
       NetworkMode: 'awsvpc'
       Memory: '512'
       Cpu: '256'
