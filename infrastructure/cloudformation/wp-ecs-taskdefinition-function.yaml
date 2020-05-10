@@ -27,8 +27,14 @@ Resources:
             } else if (event.RequestType === 'Delete') {
               ecs.deregisterTaskDefinition({taskDefinition: event.PhysicalResourceId}, function(err) {
                 if (err) {
-                  console.error(err);
-                  response.send(event, context, response.FAILED)
+                  if (err.code === 'InvalidParameterException') {
+                    console.log(`ECS Task definition: $event.PhysicalResourceId{} does not exists. Skipping deletion.`)
+                    response.send(event, context, response.SUCCESS)
+                  }
+                  else {
+                    console.error(err);
+                    response.send(event, context, response.FAILED)
+                  }
                 } else {
                   console.log(`Removed task definition ${event.PhysicalResourceId}`)
                   response.send(event, context, response.SUCCESS)
@@ -69,6 +75,10 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
                 Resource: '*'
 
 Outputs:
