@@ -42,13 +42,13 @@ Parameters:
   SsmParameterKmsKeyAlias:
     Type: 'String'
     Description: 'Load balancer target group for associating ECS Service'
-    Default: 'aws/ssm'
+    Default: 'alias/aws/ssm'
     MinLength: 1
 
   SecretManagerKmsKeyAlias:
     Type: 'String'
     Description: 'Load balancer target group for associating ECS Service'
-    Default: 'aws/secretsmanager'
+    Default: 'alias/aws/secretsmanager'
     MinLength: 1
 
   SsmNginxPrivateKey:
@@ -184,8 +184,8 @@ Resources:
                 Action:
                   - kms:Decrypt
                 Resource:
-                  - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${SsmParameterKmsKeyAlias}
-                  - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${SecretManagerKmsKeyAlias}
+                  - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:${SsmParameterKmsKeyAlias}
+                  - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:${SecretManagerKmsKeyAlias}
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue

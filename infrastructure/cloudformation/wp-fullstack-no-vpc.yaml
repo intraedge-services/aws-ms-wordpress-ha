@@ -129,13 +129,13 @@ Parameters:
   SsmParameterKmsKeyAlias:
     Type: 'String'
     Description: 'Load balancer target group for associating ECS Service'
-    Default: 'aws/ssm'
+    Default: 'alias/aws/ssm'
     MinLength: 1
 
   SecretManagerKmsKeyAlias:
     Type: 'String'
     Description: 'Load balancer target group for associating ECS Service'
-    Default: 'aws/secretsmanager'
+    Default: 'alias/aws/secretsmanager'
     MinLength: 1
 
   SsmNginxPrivateKey:
