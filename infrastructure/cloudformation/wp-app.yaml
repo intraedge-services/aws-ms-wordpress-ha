@@ -56,6 +56,12 @@ Parameters:
     MinLength: 1
     AllowedPattern: '^[/].*'
 
+  CustomTaskDefinitionLambdaArn:
+    Type: 'String'
+    Description: |
+      Custom lambda function ARN for creating ECS task definition that supports EFS Volumes
+    MinLength: 1
+
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -242,3 +248,8 @@ Resources:
         - ContainerName: nginx-proxy
           ContainerPort: 443
           TargetGroupArn: !Ref TargetGroupArn
+
+Outputs:
+  CustomTaskDefinitionLambdaArn:
+    Description: Lambda function for creating task definition.
+    Value: !Ref CustomTaskDefinitionLambdaArn

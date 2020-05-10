@@ -221,6 +221,12 @@ Resources:
         EfsSecurityGroup:  !GetAtt VpcSecurity.Outputs.EfsSecurityGroup
         EfsBackupCronSchedule: !Ref EfsBackupCronSchedule
 
+  WpCustomTaskDefinitionFunction:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub "https://${CustomCfnBucketName}.s3.${CustomCfnBucketRegion}.${AWS::URLSuffix}/${CustomCfnBucketPrefix}/infrastructure/cloudformation/wp-ecs-taskdefinition-function.yaml"
+      Parameters: {}
+
   WpApp:
     Type: "AWS::CloudFormation::Stack"
     Properties:
@@ -240,4 +246,5 @@ Resources:
         SsmParameterKmsKeyAlias: !Ref SsmParameterKmsKeyAlias
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
+        CustomTaskDefinitionLambdaArn: !GetAtt WpCustomTaskDefinitionFunction.Outputs.CustomResourceFunctionArn
     DeletionPolicy: "Delete"
