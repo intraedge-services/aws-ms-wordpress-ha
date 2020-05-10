@@ -25,7 +25,7 @@ Once the zone is created, updated the name server of the domain registrar to poi
 #### Public ACM Certificates
 - Login to AWS Account (dev/production) and go to [ACM wizard](https://console.aws.amazon.com/acm/home?region=us-west-2#/wizard/).
 - Switch to desired region where this stack needs to be created.
-- Add domain names for loadbalancer: lb.example.com
+- Add domain names for loadbalancer: lb.example.com, admin.example.com
 - Use DNS Validation for verifying domain.
 - Create the request and use option : "Create record in route53" to automatically create verification records.
 - Now switch region to us-east-1 and create new [ACM Certificate for cloudfront](https://console.aws.amazon.com/acm/home?region=us-east-1#/wizard/)

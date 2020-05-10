@@ -14,6 +14,18 @@ Parameters:
     Type: "AWS::EC2::Subnet::Id"
     Description: "Public Subnet 3"
 
+  PrivateSubnet1Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Private Subnet 1"
+
+  PrivateSubnet2Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Private Subnet 2"
+
+  PrivateSubnet3Id:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: "Private Subnet 3"
+
   AlbSecurityGroup:
     Type: "AWS::EC2::SecurityGroup::Id"
     Description: "ALB Security Group Id"
@@ -25,7 +37,8 @@ Parameters:
   AlbAcmCertificateArn:
     Type: "String"
     MinLength: "1"
-    Description: ARN For ACM Certificate to be used by ALB
+    Description: |
+      ARN For ACM Certificate to be used by public (lb.example.com) and internal ALB (admin.example.com)
 
   HostedZone:
     Type: String
@@ -39,6 +52,11 @@ Parameters:
     Description: DNS Name for load balancer
     Default: "lb"
 
+  PrivateLoadBalancerDnsName:
+    Type: "String"
+    MinLength: "1"
+    Description: DNS Name for private load balancer
+    Default: "admin"
 
 
 Resources:
@@ -58,6 +76,21 @@ Resources:
         - !Ref PublicSubnet2Id
         - !Ref PublicSubnet3Id
 
+  PrivateLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        # this is the default, but is specified here in case it needs to be changed
+        - Key: idle_timeout.timeout_seconds
+          Value: '60'
+      Scheme: internal
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+      Subnets:
+        - !Ref PrivateSubnet1Id
+        - !Ref PrivateSubnet2Id
+        - !Ref PrivateSubnet3Id
+
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -76,7 +109,37 @@ Resources:
       TargetType: ip
       VpcId: !Ref VpcId
 
+  PrivateTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: "200-399"
+      HealthCheckTimeoutSeconds: 2
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Port: 443
+      Protocol: HTTPS
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "60" # default is 300
+      TargetType: ip
+      VpcId: !Ref VpcId
+
   ListenerHttps:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref AlbAcmCertificateArn
+
+  PrivateListenerHttps:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
@@ -120,6 +183,16 @@ Resources:
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
       Type: A
 
+  PrivateAlbDnsRecords:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Sub "${PrivateLoadBalancerDnsName}.${HostedZone}."
+      HostedZoneName: !Sub ${HostedZone}.
+      AliasTarget:
+        DNSName: !GetAtt PrivateLoadBalancer.DNSName
+        HostedZoneId: !GetAtt PrivateLoadBalancer.CanonicalHostedZoneID
+      Type: A
+
 Outputs:
   TargetGroupArn:
     Description: Default target group ARN for wordpress load balancer
@@ -128,3 +201,11 @@ Outputs:
   AlbDnsRecord:
     Description: Route53 record value for ALB
     Value: !Ref AlbDnsRecords
+
+  PrivateTargetGroupArn:
+    Description: Default target group ARN for wordpress load balancer
+    Value: !Ref PrivateTargetGroup
+
+  PrivateAlbDnsRecord:
+    Description: Route53 record value for ALB
+    Value: !Ref PrivateAlbDnsRecords
