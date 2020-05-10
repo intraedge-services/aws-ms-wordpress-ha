@@ -104,6 +104,8 @@ Resources:
       DestinationCidrBlock:
         Ref: TargetNetworkCidrforAuthorization
       Description: "VPN Route"
+    Condition: EnableClientVpn
+    DependsOn: NetworkAssociation
 
 Outputs:
   VPNEndPointname:
