@@ -151,6 +151,13 @@ Parameters:
     MinLength: "1"
     Description: ARN For ACM Certificate to be used by ALB
 
+  PrivateLoadBalancerDnsName:
+    Type: "String"
+    MinLength: "1"
+    Description: DNS Name for private load balancer
+    Default: "admin"
+
+
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
 
@@ -195,10 +202,14 @@ Resources:
         PublicSubnet1Id: !Ref PublicSubnet1Id
         PublicSubnet2Id: !Ref PublicSubnet2Id
         PublicSubnet3Id: !Ref PublicSubnet3Id
+        PrivateSubnet1Id: !Ref AppSubnet1Id
+        PrivateSubnet2Id: !Ref AppSubnet2Id
+        PrivateSubnet3Id: !Ref AppSubnet3Id
         AlbSecurityGroup:  !GetAtt VpcSecurity.Outputs.AlbSecurityGroup
         AlbAcmCertificateArn: !Ref AlbAcmCertificateArn
         HostedZone: !Ref HostedZone
         LoadBalancerDnsName: !Ref LoadBalancerDnsName
+        PrivateLoadBalancerDnsName: !Ref PrivateLoadBalancerDnsName
         VpcId: !Ref VpcId
 
   WpLoadCloudfront:

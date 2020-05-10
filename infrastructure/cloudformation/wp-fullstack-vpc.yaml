@@ -94,6 +94,12 @@ Parameters:
     Description: DNS Name for load balancer
     Default: "lb"
 
+  PrivateLoadBalancerDnsName:
+    Type: "String"
+    MinLength: "1"
+    Description: DNS Name for private load balancer
+    Default: "admin"
+
   SsmParameterKmsKeyAlias:
     Type: 'String'
     Description: 'Load balancer target group for associating ECS Service'
@@ -226,6 +232,7 @@ Resources:
         AlbAcmCertificateArn: !Ref AlbAcmCertificateArn
         HostedZone: !Ref HostedZone
         LoadBalancerDnsName: !Ref LoadBalancerDnsName
+        PrivateLoadBalancerDnsName: !Ref PrivateLoadBalancerDnsName
         SsmParameterKmsKeyAlias: !Ref SsmParameterKmsKeyAlias
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
