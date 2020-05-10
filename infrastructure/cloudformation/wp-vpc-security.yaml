@@ -23,11 +23,6 @@ Resources:
           Value: ALB
       GroupDescription: Access to Application Load Balancer
       SecurityGroupIngress:
-        - Description: Allow HTTP
-          CidrIp: '0.0.0.0/0'
-          FromPort: 80
-          ToPort: 80
-          IpProtocol: 'TCP'
         - Description: Allow HTTPS
           CidrIp: '0.0.0.0/0'
           FromPort: 443
@@ -45,11 +40,11 @@ Resources:
       SecurityGroupIngress:
         - SourceSecurityGroupId: !Ref AlbSecurityGroup
           Description: Allow access from application
-          FromPort: 80
-          ToPort: 80
+          FromPort: 443
+          ToPort: 443
           IpProtocol: 'TCP'
-        - SourceSecurityGroupId: !Ref AlbSecurityGroup
-          Description: Allow access from application
+        - CidrIp: !Ref VpnCidr
+          Description: Allow access from VPN
           FromPort: 443
           ToPort: 443
           IpProtocol: 'TCP'
@@ -69,7 +64,7 @@ Resources:
           ToPort: 2049
           IpProtocol: 'TCP'
         - CidrIp: !Ref VpnCidr
-          Description: Allow NFS access from Jump host
+          Description: Allow NFS access from VPN
           FromPort: 2049
           ToPort: 2049
           IpProtocol: 'TCP'
