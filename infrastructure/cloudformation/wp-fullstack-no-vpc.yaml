@@ -254,6 +254,7 @@ Resources:
             - !Ref ParentStackName
         AppLogRetentionDays:  !Ref AppLogRetentionDays
         TargetGroupArn: !GetAtt WpLoadBalancer.Outputs.TargetGroupArn
+        PrivateTargetGroupArn: !GetAtt WpLoadBalancer.Outputs.PrivateTargetGroupArn
         SsmParameterKmsKeyAlias: !Ref SsmParameterKmsKeyAlias
         SsmNginxPrivateKey: !Ref SsmNginxPrivateKey
         SsmNginxCert: !Ref SsmNginxCert
