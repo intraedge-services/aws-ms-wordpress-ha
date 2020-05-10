@@ -73,6 +73,8 @@ Stack                          | Description                                 | Q
 -------------------------------|---------------------------------------------|-----------------------------------
 wordpress-fullstack            | Launches full wordpress stack with vpc      | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-fullstack-vpc.yaml&stackName=wordpress)
 wordpress-fullstack-no-vpc     | Launches full wordpress stack without vpc   | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-fullstack-no-vpc.yaml&stackName=wordpress)
+vpn-client                     | Client VPN Stack for connecting to admin    | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-vpn-client.yaml&stackName=wordpress-client-vpn)
+
 
 *Note: To deploy to different region, simply change region in AWS Console*
 
