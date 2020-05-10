@@ -207,6 +207,8 @@ Resources:
             - !Sub ${AWS::StackName}
             - !Ref ParentStackName
         DbPasswordRotationScheduleInDays: !Ref DbPasswordRotationScheduleInDays
+        DbName: !Ref DbName
+        DbUsername: !Ref DbUsername
     DeletionPolicy: "Delete"
 
   WpLoadBalancer:
@@ -275,7 +277,5 @@ Resources:
         SsmNginxCert: !Ref SsmNginxCert
         CustomTaskDefinitionLambdaArn: !GetAtt WpCustomTaskDefinitionFunction.Outputs.CustomResourceFunctionArn
         EfsFileSystemId: !GetAtt WpEfs.Outputs.SharedFS
-        DbName: !Ref DbName
-        DbUsername: !Ref DbUsername
-        DbHost: !GetAtt WpDatabase.Outputs.Endpoint
+        DbRootSecretArn: !GetAtt WpDatabase.Outputs.DbRootSecretArn
     DeletionPolicy: "Delete"
