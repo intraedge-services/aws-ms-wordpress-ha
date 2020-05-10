@@ -61,12 +61,13 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      # HealthCheckIntervalSeconds: 10
-      # will look for a 200 status code by default unless specified otherwise
-      # HealthCheckPath: !Ref HealthCheckPath
-      # HealthCheckTimeoutSeconds: 5
-      # UnhealthyThresholdCount: 2
-      # HealthyThresholdCount: 2
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: "200-399"
+      HealthCheckTimeoutSeconds: 2
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
       Port: 443
       Protocol: HTTPS
       TargetGroupAttributes:

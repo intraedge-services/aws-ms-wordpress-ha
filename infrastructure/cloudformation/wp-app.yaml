@@ -106,8 +106,8 @@ Resources:
             #Large File Uploads
             client_max_body_size 100M;
 
-            # root /var/www/html/;
-            root /usr/share/nginx/html;
+            root /var/www/html/;
+            # root /usr/share/nginx/html;
             index index.php index.html;
 
             location / {
@@ -164,66 +164,6 @@ Resources:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxPrivateKey}
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxCert}
                   - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${SsmParameterKmsKeyAlias}
-
-  WpTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      ContainerDefinitions:
-        - Image: "wordpress:5.4.1-php7.4-fpm-alpine"
-          Name: "wordpress"
-          Essential: false
-          Memory: 128
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: wordpress-app
-          Secrets: []
-        - Image: "nginx:1.18.0-alpine"
-          Name: "nginx-proxy"
-          Essential: true
-          Memory: 128
-          PortMappings:
-            - ContainerPort: 443
-              HostPort: 443
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-region: !Ref AWS::Region
-              awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: wordpress-nginx
-          Secrets:
-            - Name: NGINX_CONFIG
-              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${NginxConfig}
-            - Name: NGINX_SSL_PRIVATE_KEY
-              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxPrivateKey}
-            - Name: NGINX_SSL_CERT
-              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SsmNginxCert}
-          Command:
-            - "sh"
-            - "-c"
-            - |
-              set -ueo pipefail;
-              # TODO: Pull in certs from ACM
-              NGINX_CONFD_DIR=/etc/nginx/conf.d
-              NGINX_SSL_DIR=/etc/nginx/ssl
-              echo "Storing NGINX_CONFIG to $NGINX_CONFD_DIR/wordpress.conf"
-              mkdir -p "$NGINX_CONFD_DIR"
-              echo -n "$NGINX_CONFIG" > "$NGINX_CONFD_DIR/wordpress.conf"
-
-              echo "Adding certificates and private key"
-              mkdir -p "$NGINX_SSL_DIR"
-              echo -n "$NGINX_SSL_CERT" > "$NGINX_SSL_DIR/server.crt"
-              echo -n "$NGINX_SSL_PRIVATE_KEY" > "$NGINX_SSL_DIR/server.key"
-
-              echo "Starting nginx..."
-              nginx -g 'daemon off;'
-      NetworkMode: 'awsvpc'
-      Memory: '512'
-      Cpu: '256'
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
 
   WpCustomTaskDefinition:
     Type: 'Custom::TaskDefinition'
