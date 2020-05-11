@@ -103,11 +103,11 @@ Resources:
         MetricName: !Ref AWS::StackName
         SampledRequestsEnabled: true
 
-  WafAssosciation:
-    Type: AWS::WAFv2::WebACLAssociation
-    Properties:
-      ResourceArn: !Ref WpCloudfrontArn
-      WebACLArn: !GetAtt WebAcl.Arn
+#  WafAssosciation:
+#    Type: AWS::WAFv2::WebACLAssociation
+#    Properties:
+#      ResourceArn: !Ref WpCloudfrontArn
+#      WebACLArn: !GetAtt WebAcl.Arn
 
 Outputs:
   WebAcl:
@@ -117,3 +117,6 @@ Outputs:
   WebAclArn:
     Description: Web ACL ARN
     Value: !GetAtt WebAcl.Arn
+
+  WpCloudfrontArn:
+    Value: !Ref WpCloudfrontArn
