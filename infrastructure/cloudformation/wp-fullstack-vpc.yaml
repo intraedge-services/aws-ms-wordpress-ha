@@ -233,7 +233,7 @@ Resources:
         CustomCfnBucketRegion: !Ref CustomCfnBucketRegion
         CustomCfnBucketPrefix: !Ref CustomCfnBucketPrefix
         VpcId: !GetAtt VPCStack.Outputs.VPCID
-        VpnCidr: !Ref VpnCidr
+        VPNSecurityGroup: !GetAtt ClientVpnStack.Outputs.VPNSecurityGroup
         DbSubnet1Id:  !GetAtt VPCStack.Outputs.PrivateSubnet1BID
         DbSubnet2Id:  !GetAtt VPCStack.Outputs.PrivateSubnet2BID
         DbSubnet3Id:  !GetAtt VPCStack.Outputs.PrivateSubnet3BID

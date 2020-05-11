@@ -110,8 +110,11 @@ Resources:
 
 Outputs:
   VPNEndPointname:
-    Description: "VPN Endpoint name"
+    Description: "Client VPN Endpoint name"
     Value: !Ref ClientVPNEndpoint
   LogGroupName:
     Description: "LogGroup Name"
     Value: !Ref ClientVPNLogGroup
+  VPNSecurityGroup:
+    Description: "Security group id for Client VPN"
+    Value: !GetAtt VPNSecurityGroup.GroupId
