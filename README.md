@@ -79,6 +79,7 @@ Only Server certificate needs to be uploaded to ACM.
 
 #### Setup Global WAF (Optional)
 For added security, global WAF needs to be setup in us-east-1 region.
+
 [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-waf-us-east-1.yaml&stackName=wordpress-waf)
 
 *Note: This is an optional step and can be skipped if WAF is not needed.*
