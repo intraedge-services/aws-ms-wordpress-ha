@@ -223,7 +223,7 @@ Resources:
           - name: "efs"
             efsVolumeConfiguration:
               fileSystemId: !Ref EfsFileSystemId
-          - name: "wordpress-secrets"
+          - name: "database_scratch"
             host: {}
 
         containerDefinitions:
@@ -251,7 +251,7 @@ Resources:
                 awslogs-group: !Ref LogGroup
                 awslogs-stream-prefix: wordpress-db-password
             mountPoints:
-              - sourceVolume: "wordpress-secrets"
+              - sourceVolume: "database_scratch"
                 containerPath: "/run/secrets"
 
           - image: "wordpress:5.4.1-php7.4-fpm-alpine"
@@ -266,7 +266,7 @@ Resources:
             mountPoints:
               - sourceVolume: "efs"
                 containerPath: "/var/www/html"
-              - sourceVolume: "wordpress-secrets"
+              - sourceVolume: "database_scratch"
                 containerPath: "/run/secrets"
             environment:
               - name: WORDPRESS_DB_PASSWORD_FILE
