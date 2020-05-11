@@ -77,6 +77,12 @@ to create
 
 Only Server certificate needs to be uploaded to ACM.
 
+#### Setup Global WAF (Optional)
+For added security, global WAF needs to be setup in us-east-1 region.
+[![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-waf-us-east-1.yaml&stackName=wordpress-waf)
+
+*Note: This is an optional step and can be skipped if WAF is not needed.*
+
 
 ### Launch Stack
 Stack                          | Description                                                | Quick Launch Url
@@ -84,7 +90,6 @@ Stack                          | Description                                    
 wordpress-fullstack            | Launches full wordpress stack with vpc and client vpn      | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-fullstack-vpc.yaml&stackName=wordpress)
 wordpress-fullstack-no-vpc     | Launches full wordpress stack without vpc                  | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-fullstack-no-vpc.yaml&stackName=wordpress)
 vpn-client                     | Client VPN Stack for connecting to admin                   | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-vpn-client.yaml&stackName=wordpress-client-vpn)
-wordpress-waf                  | Web application firewall (global) for wordpress cloudfront | [![Launch Stack](https://cdn.rawgit.com/buildkite/cloudformation-launch-stack-button-svg/master/launch-stack.svg)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?templateURL=https://wp-cfn-deploy-s3-cloudformationbucket-1imzg0gegwkod.s3-us-west-2.amazonaws.com/v1/infrastructure/cloudformation/wp-waf-us-east-1.yaml&stackName=wordpress-waf)
 
 
 *Note: To deploy to different region, simply change region in AWS Console*

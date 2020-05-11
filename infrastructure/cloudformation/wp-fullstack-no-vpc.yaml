@@ -178,6 +178,14 @@ Parameters:
     Description: DNS Name for private load balancer
     Default: "admin"
 
+  WafArn:
+    Type: String
+    AllowedPattern: '^$|(arn[:].*)'
+    MinLength: 0
+    Description: |
+      Global WAF Arn. If this is not specified, WAF Is not configured. See wp-waf-us-east-1.yaml to
+      configure Global WAF in us-east-1 region.
+
 
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
@@ -244,6 +252,7 @@ Resources:
         CloudfrontAcmCertificateArn: !Ref CloudfrontAcmCertificateArn
         HostedZone: !Ref HostedZone
         AlbDnsRecord: !GetAtt WpLoadBalancer.Outputs.AlbDnsRecord
+        WafArn: !Ref WafArn
 
   WpEfs:
     Type: "AWS::CloudFormation::Stack"

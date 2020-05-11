@@ -18,6 +18,14 @@ Parameters:
     MinLength: 1
     Description: ARN For ACM Certificate to be used by ALB
 
+  WafArn:
+    Type: String
+    AllowedPattern: '^$|(arn[:].*)'
+    MinLength: 0
+    Description: |
+      Global WAF Arn. If this is not specified, WAF Is not configured. See wp-waf-us-east-1.yaml to
+      configure Global WAF in us-east-1 region.
+
 
 Resources:
   CloudfrontDistribution:
@@ -43,7 +51,7 @@ Resources:
           AcmCertificateArn: !Ref CloudfrontAcmCertificateArn
           SslSupportMethod: 'sni-only'
           MinimumProtocolVersion: 'TLSv1.2_2018'
-        # WebACLId: !Ref WafArn
+        WebACLId: !Ref WafArn
         DefaultCacheBehavior:
           AllowedMethods:
             - GET

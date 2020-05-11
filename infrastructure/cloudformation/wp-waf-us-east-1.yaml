@@ -3,13 +3,6 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Description: Web application firewall stack (Global) - us-east-1 region only
 
-Parameters:
-  WpCloudfrontArn:
-    Type: String
-    AllowedPattern: '^arn[:].*'
-    MinLength: 0
-    Description: 'Wordpress cloudfront distribution ARN'
-
 Resources:
   WebAcl:
     Type: AWS::WAFv2::WebACL
@@ -103,12 +96,6 @@ Resources:
         MetricName: !Ref AWS::StackName
         SampledRequestsEnabled: true
 
-#  WafAssosciation:
-#    Type: AWS::WAFv2::WebACLAssociation
-#    Properties:
-#      ResourceArn: !Ref WpCloudfrontArn
-#      WebACLArn: !GetAtt WebAcl.Arn
-
 Outputs:
   WebAcl:
     Description: Web ACL
@@ -117,6 +104,3 @@ Outputs:
   WebAclArn:
     Description: Web ACL ARN
     Value: !GetAtt WebAcl.Arn
-
-  WpCloudfrontArn:
-    Value: !Ref WpCloudfrontArn
