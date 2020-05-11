@@ -16,7 +16,7 @@ Resources:
             console.log("REQUEST RECEIVED:\n" + JSON.stringify(event))
             if (event.RequestType === 'Create' || event.RequestType === 'Update') {
               event.ResourceProperties.TaskDefinition.containerDefinitions.forEach(containerDefinition => {
-                # Convert containerDefinition.essential to boolean
+                // Convert containerDefinition.essential to boolean
                 if(containerDefinition.essential) {
                   containerDefinition.essential = containerDefinition.essential.toLowerCase() === 'true';
                 }
