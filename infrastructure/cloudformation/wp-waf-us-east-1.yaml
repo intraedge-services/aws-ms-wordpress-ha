@@ -1,0 +1,119 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Web application firewall stack (Global) - us-east-1 region only
+
+Parameters:
+  WpCloudfrontArn:
+    Type: String
+    AllowedPattern: '^arn[:].*'
+    MinLength: 0
+    Description: 'Wordpress cloudfront distribution ARN'
+
+Resources:
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Ref AWS::StackName
+      DefaultAction:
+        Allow: {}
+      Description: 'Wordpress Web ACL'
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 0
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSet
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+              ExcludedRules: []
+        - Name: AWSManagedRulesAdminProtectionRuleSet
+          Priority: 5
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesAdminProtectionRuleSet
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAdminProtectionRuleSet
+              ExcludedRules: []
+        - Name: AWSManagedRulesLinuxRuleSet
+          Priority: 10
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesLinuxRuleSet
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesLinuxRuleSet
+              ExcludedRules: []
+        - Name: AWSManagedRulesAmazonIpReputationList
+          Priority: 20
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesAmazonIpReputationList
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAmazonIpReputationList
+              ExcludedRules: []
+        - Name: AWSManagedRulesAnonymousIpList
+          Priority: 20
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesAnonymousIpList
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAnonymousIpList
+              ExcludedRules: []
+        - Name: AWSManagedRulesWordPressRuleSet
+          Priority: 40
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesWordPressRuleSet
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesWordPressRuleSet
+              ExcludedRules: []
+      Scope: 'CLOUDFRONT'
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Ref AWS::StackName
+        SampledRequestsEnabled: true
+
+  WafAssosciation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref WpCloudfrontArn
+      WebACLArn: !GetAtt WebAcl.Arn
+
+Outputs:
+  WebAcl:
+    Description: Web ACL
+    Value: !Ref WebAcl
+
+  WebAclArn:
+    Description: Web ACL ARN
+    Value: !GetAtt WebAcl.Arn
