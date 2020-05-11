@@ -283,7 +283,7 @@ Resources:
                   define('WP_SITEURL',  'https://' . $_SERVER['HTTP_HOST']);
             dependsOn:
               - containerName: "wordpress-db-password"
-                condition: "success"
+                condition: "SUCCESS"
           - image: "nginx:1.18.0-alpine"
             name: "nginx-proxy"
             memory: 128
