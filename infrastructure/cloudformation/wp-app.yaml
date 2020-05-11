@@ -268,7 +268,7 @@ Resources:
                 containerPath: "/var/www/html"
               - sourceVolume: "wordpress-secrets"
                 containerPath: "/run/secrets"
-            environments:
+            environment:
               - name: WORDPRESS_DB_PASSWORD_FILE
                 value: "/run/secrets/db-password"
               - name: WORDPRESS_DB_NAME
