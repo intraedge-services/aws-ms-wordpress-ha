@@ -285,5 +285,8 @@ Resources:
         CustomTaskDefinitionLambdaArn: !GetAtt WpCustomTaskDefinitionFunction.Outputs.CustomResourceFunctionArn
         EfsFileSystemId: !GetAtt WpEfs.Outputs.SharedFS
         DbRootSecretArn: !GetAtt WpDatabase.Outputs.DbRootSecretArn
+        DbName: !Ref DbName
+        DbUsername: !Ref DbUsername
+        DbHost: !GetAtt WpDatabase.Outputs.Endpoint
         SecretManagerKmsKeyAlias: !Ref SecretManagerKmsKeyAlias
     DeletionPolicy: "Delete"

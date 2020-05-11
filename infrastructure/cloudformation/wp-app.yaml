@@ -78,10 +78,30 @@ Parameters:
     Description: EFS File System Id
     MinLength: 1
 
+  DbUsername:
+    Type: "String"
+    Default: "root"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "root")
+    MaxLength: 16
+    MinLength: 1
+
+  DbName:
+    Type: String
+    Description: The database name
+    Default: 'wordpress'
+    MinLength: 1
+
+  DbHost:
+    Type: String
+    Description: Database host
+    MinLength: 1
+
   DbRootSecretArn:
     Type: String
     Description: Database secret manager secret for root user
-    MinLength: '1'
+    MinLength: 1
     AllowedPattern: '^arn[:].*'
 
 Resources:
@@ -203,6 +223,8 @@ Resources:
           - name: "efs"
             efsVolumeConfiguration:
               fileSystemId: !Ref EfsFileSystemId
+          - name: "wordpress-secrets"
+            host: {}
 
         containerDefinitions:
           - image: "jetbrainsinfra/jq:latest"
@@ -218,6 +240,9 @@ Resources:
                 set -ueo pipefail;
                 echo "Loading username from secret"
                 echo "$DB_SECRET" | jq .username
+                echo "Saving password from secret to /run/secrets/db-password"
+                echo "$DB_SECRET" | jq .password > /run/secrets/db-password
+                echo "Finished execution of wordpress-db-password"
             memory: 32
             logConfiguration:
               logDriver: awslogs
@@ -225,6 +250,10 @@ Resources:
                 awslogs-region: !Ref AWS::Region
                 awslogs-group: !Ref LogGroup
                 awslogs-stream-prefix: wordpress-db-password
+            mountPoints:
+              - sourceVolume: "wordpress-secrets"
+                containerPath: "/run/secrets"
+
           - image: "wordpress:5.4.1-php7.4-fpm-alpine"
             name: "wordpress"
             memory: 128
@@ -237,15 +266,24 @@ Resources:
             mountPoints:
               - sourceVolume: "efs"
                 containerPath: "/var/www/html"
-#            secrets:
-#              - name: WORDPRESS_DB_USERNAME
-#                valueFrom: !Sub "${DbRootSecretArn}:username::"
-#              - name: WORDPRESS_DB_NAME
-#                valueFrom: !Sub "${DbRootSecretArn}:dbname::"
-#              - name: WORDPRESS_DB_HOST
-#                valueFrom: !Sub "${DbRootSecretArn}:host::"
-#              - name: WORDPRESS_DB_PASSWORD
-#                valueFrom: !Sub "${DbRootSecretArn}:password::"
+              - sourceVolume: "wordpress-secrets"
+                containerPath: "/run/secrets"
+            environments:
+              - name: WORDPRESS_DB_PASSWORD_FILE
+                value: "/run/secrets/db-password"
+              - name: WORDPRESS_DB_NAME
+                value: !Ref DbName
+              - name: WORDPRESS_DB_HOST
+                value: !Ref DbHost
+              - name: WORDPRESS_DB_USERNAME
+                value: !Ref DbUsername
+              - name: WORDPRESS_CONFIG_EXTRA
+                value: |
+                  define('WP_HOME',     'https://' . $_SERVER['HTTP_HOST']);
+                  define('WP_SITEURL',  'https://' . $_SERVER['HTTP_HOST']);
+            dependsOn:
+              - containerName: "wordpress-db-password"
+                condition: "success"
           - image: "nginx:1.18.0-alpine"
             name: "nginx-proxy"
             memory: 128
