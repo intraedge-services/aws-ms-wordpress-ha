@@ -239,8 +239,7 @@ Resources:
               - |
                 set -ueo pipefail;
                 echo "Saving password from secret to /run/secrets/db-password"
-                echo "$DB_SECRET" | jq .password > /run/secrets/db-password
-                echo "DB_PASSWORD ->$(cat /run/secrets/db-password)<-"
+                echo "$DB_SECRET" | jq -r .password > /run/secrets/db-password
                 echo "Finished execution of wordpress-db-password"
             memory: 32
             logConfiguration:
