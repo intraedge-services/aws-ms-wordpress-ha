@@ -72,7 +72,7 @@ Resources:
               Name: AWSManagedRulesAmazonIpReputationList
               ExcludedRules: []
         - Name: AWSManagedRulesAnonymousIpList
-          Priority: 20
+          Priority: 25
           OverrideAction:
             None: {}
           VisibilityConfig:
