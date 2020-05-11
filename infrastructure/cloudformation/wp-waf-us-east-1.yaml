@@ -64,19 +64,6 @@ Resources:
               VendorName: AWS
               Name: AWSManagedRulesAmazonIpReputationList
               ExcludedRules: []
-        - Name: AWSManagedRulesAnonymousIpList
-          Priority: 25
-          OverrideAction:
-            None: {}
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: AWSManagedRulesAnonymousIpList
-          Statement:
-            ManagedRuleGroupStatement:
-              VendorName: AWS
-              Name: AWSManagedRulesAnonymousIpList
-              ExcludedRules: []
         - Name: AWSManagedRulesWordPressRuleSet
           Priority: 40
           OverrideAction:
