@@ -186,6 +186,24 @@ Parameters:
       Global WAF Arn. If this is not specified, WAF Is not configured. See wp-waf-us-east-1.yaml to
       configure Global WAF in us-east-1 region.
 
+  AppMinContainers:
+    Type: Number
+    Description: Minimum application containers
+    MinValue: 0
+    Default: 1
+
+  AppMaxContainers:
+    Type: Number
+    Description: Maximum application containers
+    MinValue: 0
+    Default: 5
+
+  AppScalingCPUThreshold:
+    Type: Number
+    Description: Auto scaling target for CPU (in percentage)
+    MinValue: 30
+    MaxValue: 100
+    Default: 70
 
 Conditions:
   IsParentStack: !Equals [!Ref ParentStackName, '']
@@ -298,4 +316,7 @@ Resources:
         DbUsername: !Ref DbUsername
         DbHost: !GetAtt WpDatabase.Outputs.Endpoint
         SecretManagerKmsKeyAlias: !Ref SecretManagerKmsKeyAlias
+        AppMinContainers: !Ref AppMinContainers
+        AppMaxContainers: !Ref AppMaxContainers
+        AppScalingCPUThreshold: !Ref AppScalingCPUThreshold
     DeletionPolicy: "Delete"

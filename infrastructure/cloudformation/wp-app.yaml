@@ -104,6 +104,26 @@ Parameters:
     MinLength: 1
     AllowedPattern: '^arn[:].*'
 
+  AppMinContainers:
+    Type: Number
+    Description: Minimum application containers
+    MinValue: 0
+    Default: 1
+
+  AppMaxContainers:
+    Type: Number
+    Description: Maximum application containers
+    MinValue: 0
+    Default: 5
+
+  AppScalingCPUThreshold:
+    Type: Number
+    Description: Auto scaling target for CPU (in percentage)
+    MinValue: 30
+    MaxValue: 100
+    Default: 70
+
+
 Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -211,6 +231,19 @@ Resources:
                   - secretsmanager:GetSecretValue
                 Resource:
                   - !Ref DbRootSecretArn
+
+  # A role needed for auto scaling
+  AutoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
 
   WpCustomTaskDefinition:
     Type: 'Custom::TaskDefinition'
@@ -342,7 +375,7 @@ Resources:
       SchedulingStrategy: 'REPLICA'
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
-      DesiredCount: 1
+      DesiredCount: !Ref AppMinContainers
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: 'DISABLED'
@@ -360,6 +393,31 @@ Resources:
         - ContainerName: nginx-proxy
           ContainerPort: 443
           TargetGroupArn: !Ref PrivateTargetGroupArn
+
+  AutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: !Ref AppMinContainers
+      MaxCapacity: !Ref AppMaxContainers
+      ResourceId: !Join ['/', [service, !Ref ECSCluster, !GetAtt WpService.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      # "The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM) role that allows Application Auto Scaling to modify your scalable target."
+      RoleARN: !GetAtt AutoScalingRole.Arn
+
+  AutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Join ['', [!Ref WpService, AutoScalingPolicy]]
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        # Keep things at or lower than 70% CPU utilization, for example
+        TargetValue: !Ref AppScalingCPUThreshold
 
 Outputs:
   CustomTaskDefinitionLambdaArn:
