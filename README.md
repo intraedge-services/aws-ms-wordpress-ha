@@ -95,16 +95,23 @@ vpn-client                     | Client VPN Stack for connecting to admin       
 
 *Note: To deploy to different region, simply change region in AWS Console*
 
+## Support
+For support around this stack or need help around your AWS Infrastructure and application,
+contact: [cloudsales@intraedge.com](mailto:cloudsales@intraedge.com)
+
+
+
 ## Contributing
 
 ### Pre-Requisites
-- Docker
 - python3
 - pip3
 
 
 ### Pre-Commit Hooks
-```
+In order to validate the cloudformation template, install the pre-commit git hooks using command:
+
+```bash
 pip3 install -r pre-commit
 pre-commit install
 ```
