@@ -80,6 +80,7 @@ Resources:
       ConnectionLogOptions:
         CloudwatchLogGroup: !Ref ClientVPNLogGroup
         Enabled: true
+      SplitTunnel: true
 
   NetworkAssociation:
     Type: 'AWS::EC2::ClientVpnTargetNetworkAssociation'
