@@ -246,7 +246,7 @@ Resources:
         SubnetId1: !GetAtt VPCStack.Outputs.PublicSubnet1ID
         EnableClientVpn: !Ref EnableClientVpn
         ServerCertificateArn: !Ref ClientVpnServerCertificateArn
-        TargetNetworkCidrforAuthorization: '0.0.0.0/0'
+        TargetNetworkCidrforAuthorization: '10.0.0.0/16'
         ClientVpnLogsRetentionPeriod: !Ref ClientVpnLogsRetentionPeriod
     DeletionPolicy: "Delete"
 
