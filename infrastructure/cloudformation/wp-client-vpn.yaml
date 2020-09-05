@@ -23,7 +23,7 @@ Parameters:
 
   TargetNetworkCidrforAuthorization:
     Type: String
-    Default: 0.0.0.0/0
+    Default: 10.0.0.0/16
     Description: "All CIDR network"
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
 
@@ -97,17 +97,6 @@ Resources:
       TargetNetworkCidr:
         Ref: TargetNetworkCidrforAuthorization
       Description: "AuthRule"
-
-  VpnRoute:
-    Type: "AWS::EC2::ClientVpnRoute"
-    Properties:
-      ClientVpnEndpointId: !Sub '${ClientVPNEndpoint}'
-      TargetVpcSubnetId: !Ref SubnetId1
-      DestinationCidrBlock:
-        Ref: TargetNetworkCidrforAuthorization
-      Description: "VPN Route"
-    Condition: EnableClientVpn
-    DependsOn: NetworkAssociation
 
 Outputs:
   VPNEndPointname:
